@@ -120,13 +120,13 @@ function onGetPeerList(peers) {
 function onErrorConnectionClientP2P(file_id, lost_peer) {
 
   // Obtenemos un par diferente al caído
-  var peer = client_p2p[file_id].getPeerDistinct(lost_peer.id);
+  var peer = list_client_p2p[file_id].getPeerDistinct(lost_peer.id);
 
   // Reemplazamos al caído
-  client_p2p[file_id].setPeer(peer.id, peer.ip, peer.port, lost_peer.size, lost_peer.offset);
+  list_client_p2p[file_id].setPeer(peer.id, peer.ip, peer.port, lost_peer.size, lost_peer.offset);
 
   // Volvemos a descargar esa parte
-  client_p2p[file_id].downloadFile();
+  list_client_p2p[file_id].downloadFile();
 }
 
 /* Se conectar a un par */
