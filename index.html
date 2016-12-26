@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Cliente P2P - Conectando al Balanceador...
+        </title>
+        <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="./assets/css/tab.css">
+        <link rel="stylesheet" href="./assets/css/table.css">
+    </head>
+    <body>
+
+        <section style="background:#efefe9">
+            <div class="container">
+                <div class="row">
+                    <div class="board">
+                        <!-- <h2>Welcome to IGHALO!<sup>™</sup></h2>-->
+                        <div class="board-inner">
+                            <ul class="nav nav-tabs" id="myTab">
+
+                                <li class="active">
+                                    <a href="#search" data-toggle="tab" title="Búsqueda de archivos">
+                                        <span class="round-tabs two">
+                                            <i class="glyphicon glyphicon-search"></i>
+                                        </span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#download" data-toggle="tab" title="Visor de descargas">
+                                        <span class="round-tabs three">
+                                            <i class="glyphicon glyphicon glyphicon-download"></i>
+                                        </span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="tab-content">
+
+                            <div class="tab-pane fade in active" id="search">
+                                <section class="panel">
+                                    <div class="panel-body">
+                                        <div class="row">
+
+                                            <div class="col-md-12">
+                                                <div class="input-group"><input id="text-search" type="text" placeholder="Nombre de archivo a buscar" class="input-sm form-control">
+                                                    <span class="input-group-btn">
+                                                        <button id="button-search" type="button" class="btn btn-sm btn-success" disabled="">
+                                                            ¡Buscar!</button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <table id="search-table" class="table table-hover p-table header-fixed">
+                                        <thead>
+                                            <tr>
+                                                <th>Nombre</th>
+                                                <th>Tamaño</th>
+                                                <th>Cantidad de Pares</th>
+                                                <th>Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </section>
+                            </div>
+
+                            <div class="tab-pane fade" id="download">
+
+                                <div class="">
+                                    <h4>Descargas</h4>
+                                    <table id="download-table" class="table table-hover p-table header-fixed download">
+                                        <thead>
+                                            <tr>
+                                                <th>Nombre</th>
+                                                <th>Tamaño</th>
+                                                <th>Cantidad de Pares</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+
+                                <div class="">
+                                    <table id="peers-table" class="table table-hover p-table header-fixed table-striped table-bordered table-condensed download">
+                                        <thead>
+                                            <tr>
+                                                <th>Archivo</th>
+                                                <th>IP</th>
+                                                <th>Fragmento</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </body>
+                <script>
+                    window.$ = window.jQuery = require('./node_modules/jquery/dist/jquery.min.js');
+                    require('./node_modules/bootstrap/dist/js/bootstrap.min.js')
+                    require('./assets/js/tab.js')
+                    require('./controller.js')
+                </script>
+            </html>

@@ -1,0 +1,21 @@
+{
+  "name": "ClienteP2P",
+  "version": "1.0.0",
+  "description": "Cliente P2P para proyecto final de la asignatura Programación paralela y sistemas distribuidos",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Matías Ignacio Rojo",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "electron": "^1.4.1"
+  },
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "jquery": "^3.1.1",
+    "md5-file": "^3.1.1",
+    "socket.io": "^1.7.1",
+    "socket.io-client": "^1.7.1"
+  }
+}
