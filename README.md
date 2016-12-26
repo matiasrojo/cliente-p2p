@@ -29,8 +29,7 @@ $ npm install
 
 Modificar la siguiente línea de controller.js con la IP:PUERTO del balanceador
 
->  // Iniciamos la conexión con el balanceador de cargas
-   mi_client_balancer.setIPPort('192.168.0.3', 3333);
+>  mi_client_balancer.setIPPort('192.168.0.3', 3333);
    mi_client_balancer.connect();
 
 
