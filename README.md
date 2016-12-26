@@ -1,4 +1,4 @@
-# Servidor Balanceador
+# Cliente P2P
 
 #### Propósito
 
@@ -22,35 +22,16 @@ Como parte fundamental del proyecto es necesario tener instalado NodeJs (https:/
 #### Instalación
 
 ```sh
-$ git clone git@github.com:zamudio-fabian/servidor-balanceador.git
-$ cd servidor-balanceador
+$ git git@github.com:matiasrojo/cliente-p2p.git
+$ cd cliente-p2p
 $ npm install
 ```
 
-Llenar el archivo con los datos segun corresponda
+Modificar la siguiente línea de controller.js con la IP:PUERTO del balanceador
 
->   HOST=localhost
-
->   PORT=3333
-
->   APP_KEY=krXAwJcbYB36A1BzrPtiohF41KmK9Np4
-
->   NODE_ENV=development
-
->   CACHE_VIEWS=false
-
->   SESSION_DRIVER=cookie
-
->   DB_CONNECTION=sqlite
-
->   DB_HOST=127.0.0.1
-
->   DB_USER=root
-
->   DB_PASSWORD=
-
->   DB_DATABASE=adonis
-
+>  // Iniciamos la conexión con el balanceador de cargas
+   mi_client_balancer.setIPPort('192.168.0.3', 3333);
+   mi_client_balancer.connect();
 
 
 ```
