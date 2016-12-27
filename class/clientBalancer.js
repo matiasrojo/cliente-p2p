@@ -68,7 +68,7 @@ class ClientBalancer {
                 this._current_balancer = 0;
             }
 
-            this._connect()
+            this.connect()
         }.bind(this));
 
         // Detecta la desconexión
