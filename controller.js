@@ -104,7 +104,7 @@ function onGetPeerList(peers) {
 
         client_p2p.addPeer(peer.ip, 80, file_size, file_offset);
 
-        addRowTablePeer(current_file.hash, i, peer.ip, file_offset + ' - ' + file_size , 'Conectando...');
+        addRowTablePeer(current_file.nombre, current_file.hash, i, peer.ip, file_offset + ' - ' + file_size , 'Conectando...');
     });
 
     addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...');
@@ -212,11 +212,11 @@ function addRowTableDownload(id, name, size, peers, state) {
   </tr>`);
 }
 
-function addRowTablePeer(file_hash, id, ip, fragment, state) {
+function addRowTablePeer(file_name, file_hash, id, ip, fragment, state) {
 
     $('#peers-table > tbody:last-child').append(`<tr id="peer-` + file_hash + id + `">
         <td class="name">
-            <b>` + file_hash + `</b>
+            <b>` + file_name + `</b>
             <br>
         </td>
         <td class="ip">
