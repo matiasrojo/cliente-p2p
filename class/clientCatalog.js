@@ -104,11 +104,6 @@ class ClientCatalog {
             this._sendAllFilesNames();
         }.bind(this));
 
-        // No se pudo conectar
-        this._socket.on('connect_error', function() {
-            this._onErrorConnectionEvent();
-        }.bind(this));
-
         // Detecta la desconexión
         this._socket.on('disconnect', function() {
             this._onErrorConnectionEvent();
