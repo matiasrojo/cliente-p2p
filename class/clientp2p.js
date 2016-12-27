@@ -103,14 +103,9 @@ class ClientP2P {
                 console.log('Conectado a ' + ip + ':' + port);
             }.bind(this));
 
-            // No se puede conectar
-            socket.on('connect_error', function() {
-              this._onErrorConnectionEvent(this._file.id, this._getPeer(id));
-            }.bind(this));
-
             // Detecta la desconexión
             socket.on('disconnect', function() {
-                this._onErrorConnectionEvent(id);
+                this._onErrorConnectionEvent(this.getPeer(id), this._file.id);
             }.bind(this));
 
             socket.emit('getfile', {

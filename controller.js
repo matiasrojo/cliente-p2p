@@ -18,7 +18,7 @@ function load() {
     mi_server_p2p.listen();
 
     // Iniciamos la conexión con el balanceador de cargas
-    mi_client_balancer.setIPPort('192.168.0.3', 3333);
+    mi_client_balancer.setIPPort('192.168.1.7', 3333);
     mi_client_balancer.connect();
 
     // Solicitamos un servidor de catalogo al balanceador de cargas
@@ -117,16 +117,20 @@ function onGetPeerList(peers) {
 /******************* CLIENTE P2P  **************************/
 
 /* No se puede conectar o se desconecta un par */
-function onErrorConnectionClientP2P(file_id, lost_peer) {
+function onErrorConnectionClientP2P(lost_peer, file_id) {
+
+  console.log(file_id);
 
   // Obtenemos un par diferente al caído
   var peer = list_client_p2p[file_id].getPeerDistinct(lost_peer.id);
 
-  // Reemplazamos al caído
-  list_client_p2p[file_id].setPeer(peer.id, peer.ip, peer.port, lost_peer.size, lost_peer.offset);
+  if (peer != null){
+    // Reemplazamos al caído
+    list_client_p2p[file_id].setPeer(peer.id, peer.ip, peer.port, lost_peer.size, lost_peer.offset);
 
-  // Volvemos a descargar esa parte
-  list_client_p2p[file_id].downloadFile();
+    // Volvemos a descargar esa parte
+    list_client_p2p[file_id].downloadFile();
+  }
 }
 
 /* Se conectar a un par */
