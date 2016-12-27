@@ -160,10 +160,12 @@ class ClientP2P {
                 this._onConnectFilePeerEvent(this.getPeer(id), this._file.hash);
                 console.log('Conectado a ' + ip + ':' + port);
                 this._peers[id].state = 1;
+                this._connections++;
             }.bind(this));
 
             // Detecta la desconexión
             socket.on('disconnect', function() {
+                this._connections--;
                 this._peers[id].state = 0;
                 this._onErrorConnectionEvent(this.getPeer(id), this._file.id);
                 this._downloadChunks();
@@ -179,6 +181,7 @@ class ClientP2P {
 
             socket.on("sendfile", function(info) {
                 socket.disconnect();
+                this._connections--;
                 this._onCompleteDownloadFilePeer(id, info);
             }.bind(this));
     }
