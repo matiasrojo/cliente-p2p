@@ -155,11 +155,12 @@ class ClientP2P {
 
             var socket = io.connect('http://' + ip + ':' + port, { 'reconnect': false });
 
+            this._peers[id].state = 1;
+            
             // Detecta la conexión
             socket.on('connect', function() {
                 this._onConnectFilePeerEvent(this.getPeer(id), this._file.hash);
                 console.log('Conectado a ' + ip + ':' + port);
-                this._peers[id].state = 1;
                 this._connections++;
             }.bind(this));
 
