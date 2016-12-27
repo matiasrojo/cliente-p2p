@@ -40,7 +40,8 @@ class ClientP2P {
             port: port,
             size: size,
             offset: offset,
-            state: 0
+            state: 0,
+            currentChunk: 0
         });
 
         this._downloadChunks();
@@ -106,7 +107,7 @@ class ClientP2P {
        :::::::::::::::::::::::::::::::  */
     _fileComplete() {
         this._chunks.forEach((chunk, i) => {
-            if(chunk.state == false) return false;
+            if(chunk.state != 2) return false;
         });
 
         return true;
@@ -127,11 +128,11 @@ class ClientP2P {
 
         this._chunks.forEach((chunk, i) => {
             if(this._connections < MAX_CONS) {
-                if(chunk.state == false) {
+                if(chunk.state == 0) {
 
                     var peer_id = this._getPeerFree();
                     var peer = this._peers[peer_id];
-                    this._downloadFilePeer(peer_id, peer.ip, peer.port, this._file.name, chunk.size, chunk.offset);
+                    this._downloadFilePeer(i, peer_id, peer.ip, peer.port, this._file.name, chunk.size, chunk.offset);
                 }
             } else {
                 return true;
@@ -151,11 +152,13 @@ class ClientP2P {
     }
 
     /* Inicia la descarga de un servidor-par */
-    _downloadFilePeer(id, ip, port, file_name, file_size, file_offset, callback) {
+    _downloadFilePeer(chunk_id, id, ip, port, file_name, file_size, file_offset, callback) {
 
             var socket = io.connect('http://' + ip + ':' + port, { 'reconnect': false });
 
             this._peers[id].state = 1;
+            this._peers[id].currentChunk = chunk_id;
+            this._chunks[chunk_id].state = 1;
             
             // Detecta la conexión
             socket.on('connect', function() {
@@ -168,6 +171,7 @@ class ClientP2P {
             socket.on('disconnect', function() {
                 this._connections--;
                 this._peers[id].state = 0;
+                this.chunks[this._peers[id].currentChunk].state = 0;
                 this._onErrorConnectionEvent(this.getPeer(id), this._file.id);
                 this._downloadChunks();
             }.bind(this));
@@ -201,7 +205,7 @@ class ClientP2P {
     _chunkDownloaded(downloadedChunk) {
         this._chunks.forEach((chunk, i) => {
             if(chunk.offset == downloadedChunk.offset)
-                this._chunks[i].state = true;
+                this._chunks[i].state = 2;
         });
     }
 
