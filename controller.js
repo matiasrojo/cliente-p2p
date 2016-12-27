@@ -18,8 +18,8 @@ function load() {
     mi_server_p2p.listen();
 
     // Iniciamos la conexión con el balanceador de cargas
-    mi_client_balancer.addIPPort('192.168.1.7', 3333);
-    mi_client_balancer.addIPPort('192.168.1.8', 3333);
+    mi_client_balancer.addIPPort('192.168.0.3', 3333);
+    mi_client_balancer.addIPPort('192.168.0.15', 3333);
     mi_client_balancer.connect();
 
     // Solicitamos un servidor de catalogo al balanceador de cargas
@@ -215,7 +215,7 @@ function addRowTablePeer(file_hash, id, ip, fragment, state) {
 
     $('#peers-table > tbody:last-child').append(`<tr id="peer-` + file_hash + id + `">
         <td class="name">
-            <b>` + file_name + `</b>
+            <b>` + file_hash + `</b>
             <br>
         </td>
         <td class="ip">
