@@ -113,10 +113,13 @@ class ClientP2P {
     }
 
     _getPeerFree() {
+        var peerFreeId = null;
         this._peers.forEach((peer, i) => {
-            if(peer.state == 0)
-                return i;
+            if(peer.state == 0){
+                peerFreeId = i;
+            }
         });
+        return peerFreeId
     }
 
     _downloadChunks() {
@@ -125,8 +128,10 @@ class ClientP2P {
         this._chunks.forEach((chunk, i) => {
             if(this._connections < MAX_CONS) {
                 if(chunk.state == false) {
+
                     var peer_id = this._getPeerFree();
                     var peer = this._peers[peer_id];
+
                     this._downloadFilePeer(peer_id, peer.ip, peer.port, this._file.name, chunk.size, chunk.offset);
                 }
             } else {

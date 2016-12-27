@@ -123,6 +123,7 @@ function onErrorConnectionClientP2P(lost_peer, file_id) {
 
   // Obtenemos un par diferente al caído
   var peer = list_client_p2p[file_id].getPeerDistinct(lost_peer.id);
+  console.log(peer);
 
   if (peer != null){
     // Reemplazamos al caído
