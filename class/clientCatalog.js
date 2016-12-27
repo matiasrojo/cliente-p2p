@@ -32,7 +32,9 @@ class ClientCatalog {
 
     /* Conecta con el servidor de Catálogo */
     connect() {
-        this._socket = io.connect('http://' + this._ip + ':' + this._port + '/par', { 'reconnect': false });
+        this._socket = io.connect('http://' + this._ip + ':' + this._port + '/par', {
+            'reconnect': false
+        });
         this._connection();
     }
 
@@ -64,15 +66,17 @@ class ClientCatalog {
 
     /* Notifica la existencia del nuevo archivo al Catalogo */
     sendNewFile(file) {
-        md5File('./downloads/' + file, (err, hash) => {
-  if (err) throw err
+        if (file.charAt(0) != ".") {
+            md5File('./downloads/' + file, (err, hash) => {
+                if (err) throw err
 
-  this._socket.emit('nuevoArchivo', {
-                hash: hash,
-                nombre: file,
-                size: this._getFilesize('./downloads/' + file)
-            });
-})
+                this._socket.emit('nuevoArchivo', {
+                    hash: hash,
+                    nombre: file,
+                    size: this._getFilesize('./downloads/' + file)
+                });
+            })
+        }
     }
 
 
@@ -80,9 +84,9 @@ class ClientCatalog {
        :::::::  MÉTODOS PRIVADOS :::::
        :::::::::::::::::::::::::::::::  */
 
-    _sendAllFilesNames(){
-        fs.readdir('./downloads/', function (err, files) {
-             $.each(files, function(i, file) {
+    _sendAllFilesNames() {
+        fs.readdir('./downloads/', function(err, files) {
+            $.each(files, function(i, file) {
                 console.log(file);
                 this.sendNewFile(file);
             }.bind(this));
