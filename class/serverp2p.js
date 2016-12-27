@@ -44,7 +44,9 @@ class ServerP2P {
 
                     fs.read(fd, buffer, 0, data.size, data.offset, function(err, num) {
                         socket.emit('sendfile', {
-                            buffer: buffer
+                            buffer: buffer,
+                            offset: data.offset,
+                            size: data.size
                         });
                     });
                 });

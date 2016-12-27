@@ -1,19 +1,26 @@
-'use strict';
+﻿'use strict';
 
 var io = require('socket.io-client');
 var fs = require('fs');
+var CHUNK_SIZE = 1024*1024; //1Mb
+var MAX_CONS = 10; //This must be configurable
 
 class ClientP2P {
 
     constructor(onCompleteDownloadFilePeer, onErrorConnection, onConnectFilePeer, onCompleteDownload) {
         this._file = {
             id: null,
-            name: null
+            name: null,
+            hash: null,
+            size: null,
+            downloading: false
         };
         this._peers = [];
         this._state = {
             buffers: []
         };
+        this._chunks = [];
+        this._connections = 0;
         this._onCompleteDownloadFilePeerEvent = onCompleteDownloadFilePeer;
         this._onErrorConnectionEvent = onErrorConnection;
         this._onConnectFilePeerEvent = onConnectFilePeer;
@@ -35,6 +42,8 @@ class ClientP2P {
             offset: offset,
             state: 0
         });
+
+        this._downloadChunks();
     }
 
     /* Modifica un servidor-par */
@@ -63,9 +72,21 @@ class ClientP2P {
     }
 
     /* Establece el nombre del archivo a solicitar */
-    setFile(id, name) {
+    setFile(id, name, hash, size) {
         this._file.id = id;
         this._file.name = name;
+        this._file.hash = hash;
+        this._file.size = size;
+
+        var i;
+        for(i=0;i < Math.floor(size/CHUNK_SIZE); i++) {
+            this._chunks[i] = {offset: i*CHUNK_SIZE, size: CHUNK_SIZE, state: false};
+        }
+
+        if(size%CHUNK_SIZE != 0)
+            this._chunks[i] = {offset: i*CHUNK_SIZE, size: size%CHUNK_SIZE, state: false};
+
+	//Here is possible shuffle chunks to avoid download contiguous chunks every time
     }
 
     /* Devuelve el nombre del archivo a solicitar */
@@ -75,13 +96,46 @@ class ClientP2P {
 
     /* Inicia la descarga del archivo */
     downloadFile() {
-        this._downloadFilePeers();
+        this._file.downloading = true;
+        this._downloadChunks();
     }
 
 
     /* :::::::::::::::::::::::::::::::
        :::::::  MÉTODOS PRIVADOS :::::
        :::::::::::::::::::::::::::::::  */
+    _fileComplete() {
+        this._chunks.forEach((chunk, i) => {
+            if(chunk.state == false) return false;
+        });
+
+        return true;
+    }
+
+    _getPeerFree() {
+        this._peers.forEach((peer, i) => {
+            if(peer.state == 0)
+                return i;
+        });
+    }
+
+    _downloadChunks() {
+        if(this._file.downloading == false) return false;
+
+        this._chunks.forEach((chunk, i) => {
+            if(this._connections < MAX_CONS) {
+                if(chunk.state == false) {
+                    var peer_id = this._getPeerFree();
+                    var peer = this._peers[peer_id];
+                    this._downloadFilePeer(peer_id, peer.ip, peer.port, this._file.name, chunk.size, chunk.offset);
+                }
+            } else {
+                return true;
+            }
+        });
+    }
+
+
 
     /* Inicia la descarga de los servidores-pares que no hayan descargado su fragmento  */
     _downloadFilePeers() {
@@ -99,13 +153,16 @@ class ClientP2P {
 
             // Detecta la conexión
             socket.on('connect', function() {
-                this._onConnectFilePeerEvent(this.getPeer(id), this._file.name);
+                this._onConnectFilePeerEvent(this.getPeer(id), this._file.hash);
                 console.log('Conectado a ' + ip + ':' + port);
+                this._peers[id].state = 1;
             }.bind(this));
 
             // Detecta la desconexión
             socket.on('disconnect', function() {
+                this._peers[id].state = 0;
                 this._onErrorConnectionEvent(this.getPeer(id), this._file.id);
+                this._downloadChunks();
             }.bind(this));
 
             socket.emit('getfile', {
@@ -119,17 +176,43 @@ class ClientP2P {
             socket.on("sendfile", function(info) {
                 console.log(info.buffer.length);
                 socket.disconnect();
-                this._onCompleteDownloadFilePeer(id, info.buffer);
+                this._onCompleteDownloadFilePeer(id, info);
             }.bind(this));
     }
 
     /* Método que se ejecuta cuando se finaliza la descarga de uno de los pares */
-    _onCompleteDownloadFilePeer(id, buffer) {
-        this._peers[id].state = 1;
-        this._state.buffers[id] = buffer;
-        this._concatFile();
+    _onCompleteDownloadFilePeer(id, info) {
+        this._peers[id].state = 0;
+        //this._state.buffers[id] = buffer;
+        //this._concatFile();
+        this._writeChunk(info);
 
-        this._onCompleteDownloadFilePeerEvent(this.getPeer(id), this._file.name);
+        this._onCompleteDownloadFilePeerEvent(this.getPeer(id), this._file.hash);
+        this._downloadChunks();
+    }
+
+    _chunkDownloaded(downloadedChunk) {
+        this._chunks.forEach((chunk, i) => {
+            if(chunk.offset == downloadedChunk.offset)
+                this._chunks[i].state = true;
+        });
+    }
+
+    _writeChunk(info, chunk_id) {
+        fs.open('./downloads/' + this._file.name, 'w', function(err, fd) {
+            if (err) throw err;
+
+            fs.write(fd, info.buffer, 0, info.size, info.offset, function(err, written, buff) {
+                fs.close(fd, function() {
+                    this._chunkDownloaded(info);
+                    console.log('chunk[' + info.offset + ':' + (info.offset + info.size) + '] Guardado con éxito.');
+                    if(this._fileComplete()) {
+                        this._onCompleteDownloadEvent(this._file.id, this._file.name);
+                        console.log(this._file.name + ' Guardado con éxito.');
+                    }
+                }.bind(this));
+            }.bind(this))
+        }.bind(this));
     }
 
     /* Permite concatenar los buffers y guarda el archivo */

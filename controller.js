@@ -1,4 +1,4 @@
-const ClientP2P = require('./class/clientp2p.js')
+﻿const ClientP2P = require('./class/clientp2p.js')
 const ServerP2P = require('./class/serverp2p.js')
 const ClientCatalog = require('./class/clientCatalog.js')
 const ClientBalancer = require('./class/clientBalancer.js')
@@ -95,15 +95,16 @@ function onGetPeerList(peers) {
             onConnectFilePeer,
             onCompleteDownload);
 
+    client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash);
+
     $.each(peers, function(i, peer) {
 
         var file_size = (current_file.size / peers_amount) * (i + 1);
         var file_offset = (current_file.size / peers_amount) * i;
 
-        client_p2p.setFile(current_file.id, current_file.nombre);
         client_p2p.addPeer(peer.ip, 80, file_size, file_offset);
 
-        addRowTablePeer(current_file.nombre, i, peer.ip, file_offset + ' - ' + file_size , 'Conectando...');
+        addRowTablePeer(current_file.hash, i, peer.ip, file_offset + ' - ' + file_size , 'Conectando...');
     });
 
     addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...');
@@ -133,13 +134,13 @@ function onErrorConnectionClientP2P(lost_peer, file_id) {
 }
 
 /* Se conectar a un par */
-function onConnectFilePeer(peer, file_name) {
-    editRowTablePeer(file_name, peer.id, 'Descargando...');
+function onConnectFilePeer(peer, file_hash) {
+    editRowTablePeer(file_hash, peer.id, 'Descargando...');
 }
 
 /* Se completa la descarga del par */
-function onCompleteDownloadFilePeer(peer, file_name) {
-    editRowTablePeer(file_name, peer.id, 'Completado');
+function onCompleteDownloadFilePeer(peer, file_hash) {
+    editRowTablePeer(file_hash, peer.id, 'Completado');
 }
 
 /* Se completa la descarga */
@@ -210,9 +211,9 @@ function addRowTableDownload(id, name, size, peers, state) {
   </tr>`);
 }
 
-function addRowTablePeer(file_name, id, ip, fragment, state) {
+function addRowTablePeer(file_hash, id, ip, fragment, state) {
 
-    $('#peers-table > tbody:last-child').append(`<tr id="peer-` + file_name.replace('.', '') + id + `">
+    $('#peers-table > tbody:last-child').append(`<tr id="peer-` + file_hash + id + `">
         <td class="name">
             <b>` + file_name + `</b>
             <br>
@@ -230,12 +231,12 @@ function addRowTablePeer(file_name, id, ip, fragment, state) {
     </tr>`);
 }
 
-function editRowTableDownload(id, state) {
-    $('#download-' + id + ' > .p-state').html(state);
+function editRowTableDownload(peer_id, state) {
+    $('#download-' + peer_id + ' > .p-state').html(state);
 }
 
-function editRowTablePeer(file_name, id, state) {
-    $('#peer-' + file_name.replace('.', '') + id + ' > .p-state').html(state);
+function editRowTablePeer(file_hash, peer_id, state) {
+    $('#peer-' + file_hash + peer_id + ' > .p-state').html(state);
 }
 
 
