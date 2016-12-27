@@ -131,7 +131,6 @@ class ClientP2P {
 
                     var peer_id = this._getPeerFree();
                     var peer = this._peers[peer_id];
-
                     this._downloadFilePeer(peer_id, peer.ip, peer.port, this._file.name, chunk.size, chunk.offset);
                 }
             } else {
@@ -179,7 +178,6 @@ class ClientP2P {
             console.log('Se solicitó ' + file_name);
 
             socket.on("sendfile", function(info) {
-                console.log(info.buffer.length);
                 socket.disconnect();
                 this._onCompleteDownloadFilePeer(id, info);
             }.bind(this));
@@ -234,7 +232,7 @@ class ClientP2P {
 
         if (flag) {
 
-            fs.open('./downloads/' + this._file.name, 'w', function(err, fd) {
+            fs.open('./downloads/' + this._file.name, 'a', function(err, fd) {
                 if (err) throw err;
 
                 var my_buffer = Buffer.concat(this._state.buffers);

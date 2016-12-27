@@ -95,7 +95,7 @@ function onGetPeerList(peers) {
             onConnectFilePeer,
             onCompleteDownload);
 
-    client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash);
+    client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
 
     $.each(peers, function(i, peer) {
 
@@ -123,7 +123,6 @@ function onErrorConnectionClientP2P(lost_peer, file_id) {
 
   // Obtenemos un par diferente al caído
   var peer = list_client_p2p[file_id].getPeerDistinct(lost_peer.id);
-  console.log(peer);
 
   if (peer != null){
     // Reemplazamos al caído
