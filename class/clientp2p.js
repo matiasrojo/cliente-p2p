@@ -171,7 +171,7 @@ class ClientP2P {
             socket.on('disconnect', function() {
                 this._connections--;
                 this._peers[id].state = 0;
-                this.chunks[this._peers[id].currentChunk].state = 0;
+                this._chunks[this._peers[id].currentChunk].state = 0;
                 this._onErrorConnectionEvent(this.getPeer(id), this._file.id);
                 this._downloadChunks();
             }.bind(this));
