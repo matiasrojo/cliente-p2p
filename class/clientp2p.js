@@ -153,7 +153,7 @@ class ClientP2P {
 
                 fs.write(fd, my_buffer, 0, my_buffer.length, null, function(err, written, buff) {
                     fs.close(fd, function() {
-                        this._onCompleteDownloadEvent(this._file.id);
+                        this._onCompleteDownloadEvent(this._file.id, this._file.name);
                         console.log(this._file.name + ' Guardado con éxito.');
                     }.bind(this));
                 }.bind(this))

@@ -5,10 +5,10 @@ var io = require('socket.io-client');
 class ClientBalancer {
 
     constructor(onConnect, onErrorConnection, onGetServerCatalog) {
-        this._ip = null;
-        this._port = null;
+        this._balancers = [];
         this._socket = null;
         this._state = 0;
+        this._current_balancer = 0;
 
         this._onErrorConnectionEvent = onErrorConnection;
         this._onConnectEvent = onConnect;
@@ -20,15 +20,23 @@ class ClientBalancer {
        :::::::  MÉTODOS PÚBLICOS :::::
        :::::::::::::::::::::::::::::::  */
 
-    /* Establece la IP y Puerto de la conexión */
-    setIPPort(ip, port) {
-        this._ip = ip;
-        this._port = port;
+    /* Agrega una nueva IP y Puerto de la conexión */
+    addIPPort(ip, port) {
+        this._balancers.push({
+            ip: ip,
+            port: port
+        })
     }
 
-    /* Conecta con el servidor de Catálogo */
+    /* Conecta con el servidor de Balance */
     connect() {
-        this._socket = io.connect('http://' + this._ip + ':' + this._port + '/par');
+        var balancer = this._balancers[this._current_balancer];
+
+        this._socket = io.connect('http://' + balancer.ip + ':' + balancer.port + '/par', {
+            'reconnection': true,
+            'reconnectionDelay': 2000,
+            'reconnectionAttempts': 2
+        });
         this._connection();
     }
 
@@ -49,6 +57,18 @@ class ClientBalancer {
         this._socket.on('connect', function() {
             this._state = 1;
             this._onConnectEvent();
+        }.bind(this));
+
+        // Reconexión fallida
+        this._socket.on('reconnect_failed', function() {
+
+            this._current_balancer++;
+
+            if (this._current_balancer == this._balancers.length) {
+                this._current_balancer = 0;
+            }
+
+            this._connect()
         }.bind(this));
 
         // Detecta la desconexión
