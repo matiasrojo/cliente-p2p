@@ -6,7 +6,7 @@ var fs = require('fs');
 class ServerP2P {
 
     constructor() {
-        this._port = 80;
+        this._port = 6532;
     }
 
 
@@ -46,7 +46,8 @@ class ServerP2P {
                         socket.emit('sendfile', {
                             buffer: buffer,
                             offset: data.offset,
-                            size: data.size
+                            size: data.size,
+                            fileName: data.file
                         });
                     });
                 });

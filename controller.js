@@ -18,8 +18,8 @@ function load() {
     mi_server_p2p.listen();
 
     // Iniciamos la conexión con el balanceador de cargas
-    mi_client_balancer.addIPPort('192.168.0.3', 3333);
-    mi_client_balancer.addIPPort('192.168.0.15', 3333);
+    mi_client_balancer.addIPPort('127.0.0.1', 3333);
+    //mi_client_balancer.addIPPort('192.168.0.35', 3333);
     mi_client_balancer.connect();
 
     // Solicitamos un servidor de catalogo al balanceador de cargas
@@ -98,13 +98,7 @@ function onGetPeerList(peers) {
     client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
 
     $.each(peers, function(i, peer) {
-
-        var file_size = (current_file.size / peers_amount) * (i + 1);
-        var file_offset = (current_file.size / peers_amount) * i;
-
-        client_p2p.addPeer(peer.ip, 80, file_size, file_offset);
-
-        addRowTablePeer(current_file.nombre, current_file.hash, i, peer.ip, file_offset + ' - ' + file_size , 'Conectando...');
+      client_p2p.addPeer(peer.ip, 6532);
     });
 
     addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...');
@@ -120,32 +114,21 @@ function onGetPeerList(peers) {
 
 /* No se puede conectar o se desconecta un par */
 function onErrorConnectionClientP2P(lost_peer, file_id) {
-
-  // Obtenemos un par diferente al caído
-  var peer = list_client_p2p[file_id].getPeerDistinct(lost_peer.id);
-
-  if (peer != null){
-    // Reemplazamos al caído
-    list_client_p2p[file_id].setPeer(peer.id, peer.ip, peer.port, lost_peer.size, lost_peer.offset);
-
-    // Volvemos a descargar esa parte
-    list_client_p2p[file_id].downloadFile();
-  }
 }
 
 /* Se conectar a un par */
-function onConnectFilePeer(peer, file_hash) {
-    editRowTablePeer(file_hash, peer.id, 'Descargando...');
+function onConnectFilePeer(peer, file_hash, file_name, chunk) {
+  addRowTablePeer(file_name, file_hash, chunk.offset, peer.ip, chunk.offset + ' - ' + (chunk.offset + chunk.size), 'Conectando...');
 }
 
 /* Se completa la descarga del par */
-function onCompleteDownloadFilePeer(peer, file_hash) {
-    editRowTablePeer(file_hash, peer.id, 'Completado');
+function onCompleteDownloadFilePeer(peer, file_hash, chunk) {
+  editRowTablePeer(file_hash, chunk.offset, 'Completo');
 }
 
 /* Se completa la descarga */
 function onCompleteDownload(file_id, file_name) {
-    editRowTableDownload(file_id, 'Completado');
+    editRowTableDownload(file_id, 'Completo');
     mi_client_catalog.sendNewFile(file_name);
 }
 

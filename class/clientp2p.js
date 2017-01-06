@@ -4,6 +4,7 @@ var io = require('socket.io-client');
 var fs = require('fs');
 var CHUNK_SIZE = 1024*1024; //1Mb
 var MAX_CONS = 10; //This must be configurable
+var MAX_CONS_ATTEMPTS = 5;
 
 class ClientP2P {
 
@@ -16,11 +17,12 @@ class ClientP2P {
             downloading: false
         };
         this._peers = [];
-        this._state = {
-            buffers: []
+        this._chunks = {
+            pending: [],
+            current: []
         };
-        this._chunks = [];
         this._connections = 0;
+        this._timer = null;
         this._onCompleteDownloadFilePeerEvent = onCompleteDownloadFilePeer;
         this._onErrorConnectionEvent = onErrorConnection;
         this._onConnectFilePeerEvent = onConnectFilePeer;
@@ -33,43 +35,20 @@ class ClientP2P {
        :::::::::::::::::::::::::::::::  */
 
     /* Agrega un nuevo servidor-par */
-    addPeer(ip, port, size, offset) {
+    addPeer(ip, port) {
         this._peers.push({
             id: this._peers.length,
             ip: ip,
             port: port,
-            size: size,
-            offset: offset,
             state: 0,
-            currentChunk: 0
+            currentChunk: 0,
+            conecctionsAttempts: 0
         });
-
-        this._downloadChunks();
-    }
-
-    /* Modifica un servidor-par */
-    setPeer(id, ip, port, size, offset) {
-        this._peers[id] = {
-            ip: ip,
-            port: port,
-            size: size,
-            offset: offset,
-            state: 0
-        };
     }
 
     /* Obtiene un servidor-par */
     getPeer(id) {
         return this._peers[id];
-    }
-
-    /* Obtiene un servidor-par diferente al id */
-    getPeerDistinct(id) {
-      $.each(this._peers, function(i, peer) {
-        if (i != id) {
-          return peer
-        }
-      });
     }
 
     /* Establece el nombre del archivo a solicitar */
@@ -81,18 +60,12 @@ class ClientP2P {
 
         var i;
         for(i=0;i < Math.floor(size/CHUNK_SIZE); i++) {
-            this._chunks[i] = {offset: i*CHUNK_SIZE, size: CHUNK_SIZE, state: false};
+            this._chunks.pending.push({offset: i*CHUNK_SIZE, size: CHUNK_SIZE, received: false});
         }
 
-        if(size%CHUNK_SIZE != 0)
-            this._chunks[i] = {offset: i*CHUNK_SIZE, size: size%CHUNK_SIZE, state: false};
-
-	//Here is possible shuffle chunks to avoid download contiguous chunks every time
-    }
-
-    /* Devuelve el nombre del archivo a solicitar */
-    getFile() {
-        return this._file.name;
+        if((size%CHUNK_SIZE) != 0)
+            this._chunks.pending.push({offset: i*CHUNK_SIZE, size: size%CHUNK_SIZE, received: false});
+	   //Here is possible shuffle chunks to avoid download contiguous chunks every time
     }
 
     /* Inicia la descarga del archivo */
@@ -106,153 +79,168 @@ class ClientP2P {
        :::::::  MÉTODOS PRIVADOS :::::
        :::::::::::::::::::::::::::::::  */
     _fileComplete() {
-        this._chunks.forEach((chunk, i) => {
-            if(chunk.state != 2) return false;
-        });
-
-        return true;
+        return ((this._chunks.pending.length + Object.keys(this._chunks.current).length) == 0);
     }
 
-    _getPeerFree() {
-        var peerFreeId = null;
-        this._peers.forEach((peer, i) => {
-            if(peer.state == 0){
-                peerFreeId = i;
-            }
-        });
-        return peerFreeId
+    _rollbackChunk(chunk_id) {
+        var chunk = this._chunks.current[chunk_id];
+        if(chunk != undefined) {
+            chunk = JSON.parse(JSON.stringify(this._chunks.current[chunk_id]));
+            this._chunks.pending.push(chunk);
+            delete this._chunks.current[chunk_id]
+        } else {
+            console.log("Error en _rollbackChunk, chunk == undefined");
+        }
     }
 
     _downloadChunks() {
+        if(this._timer)
+            clearInterval(this._timer)
+
         if(this._file.downloading == false) return false;
 
-        this._chunks.forEach((chunk, i) => {
-            if(this._connections < MAX_CONS) {
-                if(chunk.state == 0) {
+        this._timer = setInterval(this._downloadChunks, 10000);
 
-                    var peer_id = this._getPeerFree();
-                    var peer = this._peers[peer_id];
-                    this._downloadFilePeer(i, peer_id, peer.ip, peer.port, this._file.name, chunk.size, chunk.offset);
-                }
-            } else {
-                return true;
+        for(var peer_id = 0; peer_id < this._peers.length; peer_id++) {
+            var peer = this._peers[peer_id];
+
+            if((peer.state == 0) && (this._chunks.pending.length > 0) && (this._connections < MAX_CONS)) {
+                var chunk = this._chunks.pending.shift();
+                var chunk_id = chunk.offset.toString();
+                
+                this._chunks.current[chunk_id] = chunk;
+                this._downloadChunk(chunk_id, peer_id, peer.ip, peer.port, this._file.name, chunk.size, chunk.offset);
             }
-        });
+        };
     }
 
-
-
-    /* Inicia la descarga de los servidores-pares que no hayan descargado su fragmento  */
-    _downloadFilePeers() {
-        this._peers.forEach((peer, i) => {
-            if (peer.state == 0) {
-              this._downloadFilePeer(i, peer.ip, peer.port, this._file.name, peer.size, peer.offset);
-            }
+    _downloadChunk(chunk_id, peer_id) {
+        var peer = this._peers[peer_id];
+        var socket = io.connect('http://' + peer.ip + ':' + peer.port, {
+            'reconnect': true,
+            'reconnection': true,
+            'reconnectionDelay': 1000,
+            'reconnectionDelayMax' : 5000,
+            'reconnectionAttempts': MAX_CONS_ATTEMPTS
         });
-    }
 
-    /* Inicia la descarga de un servidor-par */
-    _downloadFilePeer(chunk_id, id, ip, port, file_name, file_size, file_offset, callback) {
+        this._peers[peer_id].state = 1;
+        
+        // Detecta la conexión
+        socket.on('connect', function() {
+            //console.log('Conectado a ' + peer.ip + ':' + peer.port);
 
-            var socket = io.connect('http://' + ip + ':' + port, { 'reconnect': false });
+            this._connections++;
+            this._peers[peer_id].conecctionsAttempts = 0;
+            this._peers[peer_id].currentChunk = chunk_id;
 
-            this._peers[id].state = 1;
-            this._peers[id].currentChunk = chunk_id;
-            this._chunks[chunk_id].state = 1;
-            
-            // Detecta la conexión
-            socket.on('connect', function() {
-                this._onConnectFilePeerEvent(this.getPeer(id), this._file.hash);
-                console.log('Conectado a ' + ip + ':' + port);
-                this._connections++;
-            }.bind(this));
+            if(this._chunks.current[chunk_id] != undefined)
+                this._onConnectFilePeerEvent(peer, this._file.hash, this._file.name, this._chunks.current[chunk_id]);
+        }.bind(this));
 
-            // Detecta la desconexión
-            socket.on('disconnect', function() {
-                this._connections--;
-                this._peers[id].state = 0;
-                this.chunks[this._peers[id].currentChunk].state = 0;
-                this._onErrorConnectionEvent(this.getPeer(id), this._file.id);
-                this._downloadChunks();
-            }.bind(this));
+        //Detecta si hubo un error en la conexión
+        socket.on('connect_error', function(error) {
+            console.log('connect_error');
 
-            socket.emit('getfile', {
-                file: file_name,
-                size: file_size,
-                offset: file_offset
-            });
+            this._peers[peer_id].conecctionsAttempts++;
 
-            console.log('Se solicitó ' + file_name);
-
-            socket.on("sendfile", function(info) {
+            if(this._peers[peer_id].conecctionsAttempts == MAX_CONS_ATTEMPTS) {
                 socket.disconnect();
-                this._connections--;
-                this._onCompleteDownloadFilePeer(id, info);
-            }.bind(this));
-    }
+                this._rollbackChunk(chunk_id);
+                //this._peers.splice(peer_id, 1);
 
-    /* Método que se ejecuta cuando se finaliza la descarga de uno de los pares */
-    _onCompleteDownloadFilePeer(id, info) {
-        this._peers[id].state = 0;
-        //this._state.buffers[id] = buffer;
-        //this._concatFile();
-        this._writeChunk(info);
+                console.log('Deshabilitando par ' + peer.ip + ":" + peer.port);
+            }
 
-        this._onCompleteDownloadFilePeerEvent(this.getPeer(id), this._file.hash);
-        this._downloadChunks();
-    }
+            //this._onErrorConnectionEvent(peer, this._file.id);
+            this._downloadChunks();
+        }.bind(this));
 
-    _chunkDownloaded(downloadedChunk) {
-        this._chunks.forEach((chunk, i) => {
-            if(chunk.offset == downloadedChunk.offset)
-                this._chunks[i].state = 2;
+        // Detecta la desconexión
+        socket.on('disconnect', function() {
+            this._connections--;
+            this._peers[peer_id].state = 0;
+
+            var chunk = this._chunks.current[chunk_id];
+            if(chunk && (chunk.received == false)) {
+                this._rollbackChunk(chunk_id);
+                this._onErrorConnectionEvent(peer, this._file.id);
+            }
+
+            this._downloadChunks();
+        }.bind(this));
+
+        socket.emit('getfile', {
+            file: this._file.name,
+            size: this._chunks.current[chunk_id].size,
+            offset: this._chunks.current[chunk_id].offset
         });
-    }
 
-    _writeChunk(info, chunk_id) {
-        fs.open('./downloads/' + this._file.name, 'w', function(err, fd) {
-            if (err) throw err;
+        //console.log('Se solicitó ' + this._file.name + "[" + this._chunks.current[chunk_id].offset + ":" + (this._chunks.current[chunk_id].offset + this._chunks.current[chunk_id].size) + "]");
 
-            fs.write(fd, info.buffer, 0, info.size, info.offset, function(err, written, buff) {
-                fs.close(fd, function() {
-                    this._chunkDownloaded(info);
-                    console.log('chunk[' + info.offset + ':' + (info.offset + info.size) + '] Guardado con éxito.');
-                    if(this._fileComplete()) {
-                        this._onCompleteDownloadEvent(this._file.id, this._file.name);
-                        console.log(this._file.name + ' Guardado con éxito.');
-                    }
-                }.bind(this));
-            }.bind(this))
+        socket.on("sendfile", function(info) {
+            this._onCompleteDownloadFilePeer(peer_id, info);
+            socket.disconnect();
         }.bind(this));
     }
 
-    /* Permite concatenar los buffers y guarda el archivo */
-    _concatFile() {
+    /* Método que se ejecuta cuando se finaliza la descarga de uno de los pares */
+    _onCompleteDownloadFilePeer(peer_id, info) {
+        var chunk_id = info.offset.toString();
 
-        var flag = true;
-
-        // Verificamos que todos los servidores-pares hayan enviado la infomración
-        for (var i in this._peers) {
-            if (this._peers[i].state == 0) {
-                flag = false;
-            }
+        this._peers[peer_id].state = 0;
+        if(this._chunks.current[chunk_id] != undefined) {
+            this._chunks.current[chunk_id].received = true;
+        } else {
+            console.log("Error en _onCompleteDownloadFilePeer, this._chunks.current[chunk_id] != undefined");
         }
 
-        if (flag) {
+        this._writeChunk(info, 
+            function() {
+                if(this._chunks.current[chunk_id]) {
+                    delete this._chunks.current[info.offset.toString()];
+                } else {
+                    console.log("Error al llamar _writeChunk, no se encontró el chunk con id " + chunk_id);
+                }
 
-            fs.open('./downloads/' + this._file.name, 'a', function(err, fd) {
-                if (err) throw err;
+                console.log('chunk[' + info.offset + ':' + (info.offset + info.size) + '] Guardado con éxito.');
+                
+                if(this._fileComplete()) {
+                    console.log(this._file.name + ' Guardado con éxito.');
 
-                var my_buffer = Buffer.concat(this._state.buffers);
-
-                fs.write(fd, my_buffer, 0, my_buffer.length, null, function(err, written, buff) {
-                    fs.close(fd, function() {
-                        this._onCompleteDownloadEvent(this._file.id, this._file.name);
-                        console.log(this._file.name + ' Guardado con éxito.');
-                    }.bind(this));
-                }.bind(this))
+                    this._file.downloading = false;
+                    clearInterval(this._timer);
+                    this._onCompleteDownloadEvent(this._file.id, this._file.name);
+                }
+            }.bind(this), 
+            function() {
+                this._rollbackChunk(chunk_id);
             }.bind(this));
-        }
+
+        this._onCompleteDownloadFilePeerEvent(this.getPeer(peer_id), this._file.hash, info);
+        this._downloadChunks();
+    }
+
+    _writeChunk(info, successCallback, errorCallback) {
+        var path = './downloads/' + info.fileName;
+        var mode = 'r+';
+
+        fs.access(path, mode, function(err) {
+            if(err && err.code == "ENOENT")
+                mode = 'w';
+
+            fs.open('./downloads/' + info.fileName, mode, function(err, fd) {
+                if(err && errorCallback)
+                    errorCallback();
+
+                fs.write(fd, info.buffer, 0, info.size, info.offset, function(err, written, buff) {
+                    if(err && errorCallback)
+                        errorCallback();
+
+                    fs.close(fd, successCallback);
+                }.bind(this))
+            }.bind(this))
+        }.bind(this));
     }
 }
 
