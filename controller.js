@@ -1,4 +1,4 @@
-const ClientP2P = require('./class/clientp2p.js')
+﻿const ClientP2P = require('./class/clientp2p.js')
 const ServerP2P = require('./class/serverp2p.js')
 const ClientCatalog = require('./class/clientCatalog.js')
 const ClientBalancer = require('./class/clientBalancer.js')
@@ -18,8 +18,8 @@ function load() {
     mi_server_p2p.listen();
 
     // Iniciamos la conexión con el balanceador de cargas
-    mi_client_balancer.addIPPort('192.168.1.7', 3333);
-    mi_client_balancer.addIPPort('192.168.1.8', 3333);
+    mi_client_balancer.addIPPort('127.0.0.1', 3333);
+    //mi_client_balancer.addIPPort('192.168.0.35', 3333);
     mi_client_balancer.connect();
 
     // Solicitamos un servidor de catalogo al balanceador de cargas
@@ -95,15 +95,10 @@ function onGetPeerList(peers) {
             onConnectFilePeer,
             onCompleteDownload);
 
+    client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
+
     $.each(peers, function(i, peer) {
-
-        var file_size = (current_file.size / peers_amount) * (i + 1);
-        var file_offset = (current_file.size / peers_amount) * i;
-
-        client_p2p.setFile(current_file.id, current_file.nombre);
-        client_p2p.addPeer(peer.ip, 80, file_size, file_offset);
-
-        addRowTablePeer(current_file.nombre, i, peer.ip, file_offset + ' - ' + file_size , 'Conectando...');
+      client_p2p.addPeer(peer.ip, 6532);
     });
 
     addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...');
@@ -119,32 +114,21 @@ function onGetPeerList(peers) {
 
 /* No se puede conectar o se desconecta un par */
 function onErrorConnectionClientP2P(lost_peer, file_id) {
-
-  // Obtenemos un par diferente al caído
-  var peer = list_client_p2p[file_id].getPeerDistinct(lost_peer.id);
-
-  if (peer != null){
-    // Reemplazamos al caído
-    list_client_p2p[file_id].setPeer(peer.id, peer.ip, peer.port, lost_peer.size, lost_peer.offset);
-
-    // Volvemos a descargar esa parte
-    list_client_p2p[file_id].downloadFile();
-  }
 }
 
 /* Se conectar a un par */
-function onConnectFilePeer(peer, file_name) {
-    editRowTablePeer(file_name, peer.id, 'Descargando...');
+function onConnectFilePeer(peer, file_hash, file_name, chunk) {
+  addRowTablePeer(file_name, file_hash, chunk.offset, peer.ip, chunk.offset + ' - ' + (chunk.offset + chunk.size), 'Conectando...');
 }
 
 /* Se completa la descarga del par */
-function onCompleteDownloadFilePeer(peer, file_name) {
-    editRowTablePeer(file_name, peer.id, 'Completado');
+function onCompleteDownloadFilePeer(peer, file_hash, chunk) {
+  editRowTablePeer(file_hash, chunk.offset, 'Completo');
 }
 
 /* Se completa la descarga */
 function onCompleteDownload(file_id, file_name) {
-    editRowTableDownload(file_id, 'Completado');
+    editRowTableDownload(file_id, 'Completo');
     mi_client_catalog.sendNewFile(file_name);
 }
 
@@ -210,9 +194,9 @@ function addRowTableDownload(id, name, size, peers, state) {
   </tr>`);
 }
 
-function addRowTablePeer(file_name, id, ip, fragment, state) {
+function addRowTablePeer(file_name, file_hash, id, ip, fragment, state) {
 
-    $('#peers-table > tbody:last-child').append(`<tr id="peer-` + file_name.replace('.', '') + id + `">
+    $('#peers-table > tbody:last-child').append(`<tr id="peer-` + file_hash + id + `">
         <td class="name">
             <b>` + file_name + `</b>
             <br>
@@ -230,12 +214,12 @@ function addRowTablePeer(file_name, id, ip, fragment, state) {
     </tr>`);
 }
 
-function editRowTableDownload(id, state) {
-    $('#download-' + id + ' > .p-state').html(state);
+function editRowTableDownload(peer_id, state) {
+    $('#download-' + peer_id + ' > .p-state').html(state);
 }
 
-function editRowTablePeer(file_name, id, state) {
-    $('#peer-' + file_name.replace('.', '') + id + ' > .p-state').html(state);
+function editRowTablePeer(file_hash, peer_id, state) {
+    $('#peer-' + file_hash + peer_id + ' > .p-state').html(state);
 }
 
 

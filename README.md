@@ -22,7 +22,7 @@ Como parte fundamental del proyecto es necesario tener instalado NodeJs (https:/
 #### Instalación
 
 ```sh
-$ git git@github.com:matiasrojo/cliente-p2p.git
+$ git clone git@github.com:patotorres/cliente-p2p.git
 $ cd cliente-p2p
 $ npm install
 ```
