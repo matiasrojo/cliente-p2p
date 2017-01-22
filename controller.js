@@ -8,7 +8,13 @@ list_client_p2p = [];
 mi_client_balancer = new ClientBalancer(onConnectionBalancer,
                                         onErrorConnectionBalancer,
                                         onGetServerCatalog);
-mi_client_catalog = new ClientCatalog(onConnectionCatalog, onErrorConnectionCatalog, onGetFileList, onGetPeerList);
+mi_client_catalog = new ClientCatalog(onConnectionCatalog, 
+                                      onErrorConnectionCatalog, 
+                                      onGetFileList, 
+                                      onGetPeerList,
+                                      onAddNewFileDownloadPath,
+                                      onEditFileDownloadPath,
+                                      onDeleteFileDownloadPath);
 
 
 
@@ -108,6 +114,21 @@ function onGetPeerList(peers) {
     list_client_p2p[current_file.id].downloadFile();
 }
 
+
+/* Evento que está a la escucha y obtiene el nombre de un nuevo archivo creado en la carpeta de descargas */
+function onAddNewFileDownloadPath(file_name){
+  console.log(file_name + ' creado');
+}
+
+/* Evento que está a la escucha y obtiene el nombre de un archivo editado en la carpeta de descargas */
+function onEditFileDownloadPath(file_name){
+  console.log(file_name + ' modificado');
+}
+
+/* Evento que está a la escucha y obtiene el nombre de un archivo eliminado de la carpeta de descargas */
+function onDeleteFileDownloadPath(file_name){
+  console.log(file_name + ' eliminado');
+}
 
 
 /******************* CLIENTE P2P  **************************/

@@ -3,10 +3,13 @@
 var io = require('socket.io-client');
 var fs = require('fs');
 var md5File = require('md5-file')
+var chokidar = require('chokidar');
+var path = require('path');
 
 class ClientCatalog {
 
-    constructor(onConnect, onErrorConnection, onGetFileList, onGetPeerList) {
+    constructor(onConnect, onErrorConnection, onGetFileList, onGetPeerList, 
+                onAddNewFileDownloadPath, onEditFileDownloadPath, onDeleteFileDownloadPath) {
         this._ip = null;
         this._port = null;
         this._socket = null;
@@ -17,6 +20,20 @@ class ClientCatalog {
         this._onErrorConnectionEvent = onErrorConnection;
         this._onGetFileListEvent = onGetFileList;
         this._onGetPeerListEvent = onGetPeerList;
+        this._onAddNewFileDownloadPathEvent = onAddNewFileDownloadPath;
+        this._onEditFileDownloadPathEvent = onEditFileDownloadPath;
+        this._onDeleteFileDownloadPathEvent = onDeleteFileDownloadPath;
+
+
+        // Evento a la escucha de inserción, modificación y/o borrado de archivos en la carpeta de descargas
+        this._watcher = chokidar.watch('./downloads/', {
+            ignored: /[\/\\]\./, persistent: true
+        });
+
+        this._watcher
+            .on('add', function(file_path) { this._onAddNewFileDownloadPathEvent(path.basename(file_path)); }.bind(this))
+            .on('change', function(file_path) { this._onEditFileDownloadPathEvent(path.basename(file_path)); }.bind(this))
+            .on('unlink', function(file_path) { this._onDeleteFileDownloadPathEvent(path.basename(file_path)); }.bind(this))
     }
 
 
