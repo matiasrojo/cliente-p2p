@@ -8,8 +8,8 @@ var path = require('path');
 
 class ClientCatalog {
 
-    constructor(onConnect, onErrorConnection, onGetFileList, onGetPeerList, 
-                onAddNewFileDownloadPath, onEditFileDownloadPath, onDeleteFileDownloadPath) {
+    constructor(onConnect, onErrorConnection, onGetFileList, onGetPeerList,
+                onAddNewFileDownloadPath, onDeleteFileDownloadPath) {
         this._ip = null;
         this._port = null;
         this._socket = null;
@@ -21,7 +21,6 @@ class ClientCatalog {
         this._onGetFileListEvent = onGetFileList;
         this._onGetPeerListEvent = onGetPeerList;
         this._onAddNewFileDownloadPathEvent = onAddNewFileDownloadPath;
-        this._onEditFileDownloadPathEvent = onEditFileDownloadPath;
         this._onDeleteFileDownloadPathEvent = onDeleteFileDownloadPath;
 
 
@@ -31,9 +30,8 @@ class ClientCatalog {
         });
 
         this._watcher
-            .on('add', function(file_path) { this._onAddNewFileDownloadPathEvent(path.basename(file_path)); }.bind(this))
-            .on('change', function(file_path) { this._onEditFileDownloadPathEvent(path.basename(file_path)); }.bind(this))
-            .on('unlink', function(file_path) { this._onDeleteFileDownloadPathEvent(path.basename(file_path)); }.bind(this))
+            .on('add', function(file_path, stats) { this._onAddNewFileDownloadPathEvent(path.basename(file_path), stats); }.bind(this))
+            .on('unlink', function(file_path, stats) { this._onDeleteFileDownloadPathEvent(path.basename(file_path), stats); }.bind(this))
     }
 
 
@@ -94,6 +92,10 @@ class ClientCatalog {
                 });
             })
         }
+    }
+
+    sendDeleteFile(file_name){
+
     }
 
 
