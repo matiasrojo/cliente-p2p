@@ -8,12 +8,11 @@ list_client_p2p = [];
 mi_client_balancer = new ClientBalancer(onConnectionBalancer,
                                         onErrorConnectionBalancer,
                                         onGetServerCatalog);
-mi_client_catalog = new ClientCatalog(onConnectionCatalog, 
-                                      onErrorConnectionCatalog, 
-                                      onGetFileList, 
+mi_client_catalog = new ClientCatalog(onConnectionCatalog,
+                                      onErrorConnectionCatalog,
+                                      onGetFileList,
                                       onGetPeerList,
                                       onAddNewFileDownloadPath,
-                                      onEditFileDownloadPath,
                                       onDeleteFileDownloadPath);
 
 
@@ -52,9 +51,16 @@ function onConnectionBalancer() {
 /* Evento recibe servidor catálogo */
 function onGetServerCatalog(info) {
 
-    // Nos conectamos a un servidor de catálogo
-    mi_client_catalog.setIPPort(info.ip, info.port);
-    mi_client_catalog.connect();
+    if (info != null){
+
+      // Nos conectamos a un servidor de catálogo
+      mi_client_catalog.setIPPort(info.ip, info.port);
+      mi_client_catalog.connect();
+    }else{
+
+      // Solicitamos un servidor de catalogo al balanceador de cargas (10 segundos)
+      setTimeout(mi_client_balancer.getCatalogServer(), 60 * 60 * 10)
+    }
 }
 
 /* Nos desconectamos del balanceador */
@@ -85,9 +91,14 @@ function onGetFileList(files) {
 
     clearResultTableSearch();
 
-    $.each(files, function(i, file) {
-        addResultTableSearch(file.nombre, file.size, file.peers, file.id);
-    });
+    if (files.length > 0){
+      $("#info-no-files").hidde();
+      $.each(files, function(i, file) {
+          addResultTableSearch(file.nombre, file.size, file.peers, file.id);
+      });
+    }else{
+      $("#info-no-files").show()
+    }
 }
 
 /* Evento recibe lista de pares */
@@ -116,18 +127,13 @@ function onGetPeerList(peers) {
 
 
 /* Evento que está a la escucha y obtiene el nombre de un nuevo archivo creado en la carpeta de descargas */
-function onAddNewFileDownloadPath(file_name){
-  console.log(file_name + ' creado');
-}
-
-/* Evento que está a la escucha y obtiene el nombre de un archivo editado en la carpeta de descargas */
-function onEditFileDownloadPath(file_name){
-  console.log(file_name + ' modificado');
+function onAddNewFileDownloadPath(file_name, stats){
+  mi_client_catalog.sendNewFile(file_name);
 }
 
 /* Evento que está a la escucha y obtiene el nombre de un archivo eliminado de la carpeta de descargas */
-function onDeleteFileDownloadPath(file_name){
-  console.log(file_name + ' eliminado');
+function onDeleteFileDownloadPath(file_name, stats){
+  console.log(stats);
 }
 
 
