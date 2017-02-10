@@ -24,7 +24,7 @@ function load() {
     mi_server_p2p.listen();
 
     // Iniciamos la conexión con el balanceador de cargas
-    mi_client_balancer.addIPPort('127.0.0.1', 3333);
+    mi_client_balancer.addIPPort('192.168.1.36', 3333);
     //mi_client_balancer.addIPPort('192.168.0.35', 3333);
     mi_client_balancer.connect();
 
