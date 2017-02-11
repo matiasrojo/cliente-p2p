@@ -82,7 +82,7 @@ class ClientCatalog {
                 return data.id == id_file
             })[0];
 
-        this._socket.emit('getParesArchivo', id_file);
+        this._socket.emit('getParesArchivo', this._current_file_selected.hash);
     }
 
     /* Notifica la existencia del nuevo archivo al Catalogo */
