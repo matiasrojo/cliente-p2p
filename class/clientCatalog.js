@@ -6,13 +6,19 @@ var md5File = require('md5-file')
 var chokidar = require('chokidar');
 var path = require('path');
 
+
+const CATALOG_DISCONNECTED = 0;
+const CATALOG_CONNECTED = 1;
+
 class ClientCatalog {
 
     constructor(onConnect, onErrorConnection, onGetFileList, onGetPeerList,
                 onAddNewFileDownloadPath, onDeleteFileDownloadPath) {
+
         this._ip = null;
         this._port = null;
         this._socket = null;
+        this._state = CATALOG_DISCONNECTED;
         this._current_file_list = [];
         this._current_file_selected = null;
 
@@ -48,7 +54,7 @@ class ClientCatalog {
     /* Conecta con el servidor de Catálogo */
     connect() {
         this._socket = io.connect('http://' + this._ip + ':' + this._port + '/par', {
-            'reconnect': false
+            'reconnection': false
         });
         this._connection();
     }
@@ -83,13 +89,20 @@ class ClientCatalog {
     sendNewFile(file) {
         if (file.charAt(0) != ".") {
             md5File('./downloads/' + file, (err, hash) => {
-                if (err) throw err
+                if (err){
 
-                this._socket.emit('nuevoArchivo', {
-                    hash: hash,
-                    nombre: file,
-                    size: this._getFilesize('./downloads/' + file)
-                });
+                  console.log(file + " está ocupado. Se reenviará en 5 segundos...")
+                  setTimeout(function(){ this.sendNewFile(file, null) }.bind(this), 1000 * 5)
+                }else{
+
+                  this._socket.emit('nuevoArchivo', {
+                      hash: hash,
+                      nombre: file,
+                      size: this._getFilesize('./downloads/' + file)
+                  });
+
+                  console.log('Se anunció el archivo ' + file);
+                }
             })
         }
     }
@@ -97,6 +110,16 @@ class ClientCatalog {
     sendDeleteFile(file_name){
 
     }
+
+    /* Verifica si se está conectado a un servidor catálogo */
+    isCatalogConnected() {
+      if (this._state == CATALOG_CONNECTED){
+        return true;
+      }else{
+        return false;
+      }
+    }
+
 
 
     /* :::::::::::::::::::::::::::::::
@@ -106,7 +129,6 @@ class ClientCatalog {
     _sendAllFilesNames() {
         fs.readdir('./downloads/', function(err, files) {
             $.each(files, function(i, file) {
-                console.log(file);
                 this.sendNewFile(file);
             }.bind(this));
         }.bind(this));
@@ -122,6 +144,7 @@ class ClientCatalog {
 
         // Detecta la conexión
         this._socket.on('connect', function() {
+            this._state = CATALOG_CONNECTED;
             this._onConnectEvent();
             this._sendHello();
             this._sendAllFilesNames();
@@ -129,6 +152,7 @@ class ClientCatalog {
 
         // Detecta la desconexión
         this._socket.on('disconnect', function() {
+            this._state = CATALOG_DISCONNECTED;
             this._onErrorConnectionEvent();
         }.bind(this));
 

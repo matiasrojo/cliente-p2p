@@ -51,6 +51,8 @@ function onConnectionBalancer() {
 /* Evento recibe servidor catálogo */
 function onGetServerCatalog(info) {
 
+    console.log('Recibe catalogo: ' + info);
+
     if (info != null){
 
       // Nos conectamos a un servidor de catálogo
@@ -58,8 +60,8 @@ function onGetServerCatalog(info) {
       mi_client_catalog.connect();
     }else{
 
-      // Solicitamos un servidor de catalogo al balanceador de cargas (10 segundos)
-      setTimeout(mi_client_balancer.getCatalogServer(), 60 * 60 * 10)
+      // Solicitamos un servidor de catalogo al balanceador de cargas (5 segundos)
+      setTimeout(function(){ mi_client_balancer.getCatalogServer() }, 1000 * 5)
     }
 }
 
@@ -128,7 +130,11 @@ function onGetPeerList(peers) {
 
 /* Evento que está a la escucha y obtiene el nombre de un nuevo archivo creado en la carpeta de descargas */
 function onAddNewFileDownloadPath(file_name, stats){
-  mi_client_catalog.sendNewFile(file_name);
+  console.log('asd');
+
+  if (list_client_p2p.length == 0 && mi_client_catalog.isCatalogConnected()){
+      mi_client_catalog.sendNewFile(file_name);
+  }
 }
 
 /* Evento que está a la escucha y obtiene el nombre de un archivo eliminado de la carpeta de descargas */
