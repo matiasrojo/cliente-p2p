@@ -2,13 +2,19 @@
 
 var io = require('socket.io-client');
 var fs = require('fs');
-var CHUNK_SIZE = 1024*1024; //1Mb
-var MAX_CONS = 10; //This must be configurable
-var MAX_CONS_ATTEMPTS = 5;
+
+const CHUNK_SIZE = 1024*1024; //1Mb
+const MAX_CONS = 10; //This must be configurable
+const MAX_CONS_ATTEMPTS = 5;
+const CLIENT_DISCONNECTED = 0;
+const CLIENT_CONNECTED = 1;
+const CLIENT_DOWNLOADING = 2;
 
 class ClientP2P {
 
     constructor(onCompleteDownloadFilePeer, onErrorConnection, onConnectFilePeer, onCompleteDownload) {
+
+        this._state = CLIENT_DISCONNECTED;
         this._file = {
             id: null,
             name: null,
@@ -74,6 +80,15 @@ class ClientP2P {
         this._downloadChunks();
     }
 
+    /* Verifica si el cliente se encuentra haciendo una descarga */
+    isClientDownloading() {
+      if (this._state == CLIENT_DOWNLOADING){
+        return true;
+      }else{
+        return false;
+      }
+    }
+
 
     /* :::::::::::::::::::::::::::::::
        :::::::  MÉTODOS PRIVADOS :::::
@@ -107,7 +122,7 @@ class ClientP2P {
             if((peer.state == 0) && (this._chunks.pending.length > 0) && (this._connections < MAX_CONS)) {
                 var chunk = this._chunks.pending.shift();
                 var chunk_id = chunk.offset.toString();
-                
+
                 this._chunks.current[chunk_id] = chunk;
                 this._downloadChunk(chunk_id, peer_id, peer.ip, peer.port, this._file.name, chunk.size, chunk.offset);
             }
@@ -125,10 +140,12 @@ class ClientP2P {
         });
 
         this._peers[peer_id].state = 1;
-        
+
         // Detecta la conexión
         socket.on('connect', function() {
             //console.log('Conectado a ' + peer.ip + ':' + peer.port);
+
+            this._state = CLIENT_CONNECTED;
 
             this._connections++;
             this._peers[peer_id].conecctionsAttempts = 0;
@@ -188,6 +205,8 @@ class ClientP2P {
     _onCompleteDownloadFilePeer(peer_id, info) {
         var chunk_id = info.offset.toString();
 
+        this._state = CLIENT_DOWNLOADING;
+
         this._peers[peer_id].state = 0;
         if(this._chunks.current[chunk_id] != undefined) {
             this._chunks.current[chunk_id].received = true;
@@ -195,7 +214,7 @@ class ClientP2P {
             console.log("Error en _onCompleteDownloadFilePeer, this._chunks.current[chunk_id] != undefined");
         }
 
-        this._writeChunk(info, 
+        this._writeChunk(info,
             function() {
                 if(this._chunks.current[chunk_id]) {
                     delete this._chunks.current[info.offset.toString()];
@@ -204,15 +223,18 @@ class ClientP2P {
                 }
 
                 console.log('chunk[' + info.offset + ':' + (info.offset + info.size) + '] Guardado con éxito.');
-                
+
                 if(this._fileComplete()) {
+
+                    this._state = CLIENT_DISCONNECTED;
+
                     console.log(this._file.name + ' Guardado con éxito.');
 
                     this._file.downloading = false;
                     clearInterval(this._timer);
                     this._onCompleteDownloadEvent(this._file.id, this._file.name);
                 }
-            }.bind(this), 
+            }.bind(this),
             function() {
                 this._rollbackChunk(chunk_id);
             }.bind(this));
