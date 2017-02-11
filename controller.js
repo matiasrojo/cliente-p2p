@@ -94,7 +94,7 @@ function onGetFileList(files) {
     clearResultTableSearch();
 
     if (files.length > 0){
-      $("#info-no-files").hidde();
+      $("#info-no-files").hide();
       $.each(files, function(i, file) {
           addResultTableSearch(file.nombre, file.size, file.peers, file.id);
       });
@@ -130,8 +130,6 @@ function onGetPeerList(peers) {
 
 /* Evento que está a la escucha y obtiene el nombre de un nuevo archivo creado en la carpeta de descargas */
 function onAddNewFileDownloadPath(file_name, stats){
-  console.log('asd');
-
   if (list_client_p2p.length == 0 && mi_client_catalog.isCatalogConnected()){
       mi_client_catalog.sendNewFile(file_name);
   }
