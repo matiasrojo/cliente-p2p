@@ -145,6 +145,7 @@ function onDeleteFileDownloadPath(file_name, stats){
 
 /* No se puede conectar o se desconecta un par */
 function onErrorConnectionClientP2P(lost_peer, file_id) {
+  console.log('No se pudo conectar al par '+lost_peer+' descargando el archivo '+file_id);
 }
 
 /* Se conectar a un par */
@@ -156,6 +157,7 @@ function onConnectFilePeer(peer, file_hash, file_name, chunk) {
 function onCompleteDownloadFilePeer(peer, file_hash, chunk) {
   editRowTablePeer(file_hash, chunk.offset, 'Completo');
 }
+
 
 /* Se completa la descarga */
 function onCompleteDownload(file_id, file_name) {
@@ -193,7 +195,7 @@ function addResultTableSearch(name, size, peers, id) {
           <br>
       </td>
       <td class="p-progress">
-          <span>` + size + ` b</span>
+          <span>` + (size/ (1024*1024)).toFixed(2) + ` MB</span>
       </td>
       <td>
           <span class="label label-primary">` + peers + `</span>
@@ -214,7 +216,7 @@ function addRowTableDownload(id, name, size, peers, state) {
           <br>
       </td>
       <td class="p-progress">
-          <span>` + size + `</span>
+          <span>` + (size/ (1024*1024)).toFixed(2) + ` MB</span>
       </td>
       <td>
           <span class="label label-primary">` + peers + `</span>
