@@ -54,7 +54,6 @@ function onGetServerCatalog(info) {
     console.log('Recibe catalogo: ' + info);
 
     if (info != null){
-
       // Nos conectamos a un servidor de catálogo
       mi_client_catalog.setIPPort(info.ip, info.port);
       mi_client_catalog.connect();
@@ -96,7 +95,7 @@ function onGetFileList(files) {
     if (files.length > 0){
       $("#info-no-files").hide();
       $.each(files, function(i, file) {
-          addResultTableSearch(file.nombre, file.size, file.peers, file.id);
+          addResultTableSearch(file.nombre, file.size, file.peers, file.hash);
       });
     }else{
       $("#info-no-files").show()
@@ -104,9 +103,11 @@ function onGetFileList(files) {
 }
 
 /* Evento recibe lista de pares */
-function onGetPeerList(peers) {
-
-    var current_file = mi_client_catalog.getCurrentFileSelected();
+function onGetPeerList(data) {
+    //FABIAN:Entre la respuesta del catalogo puede que el currentFileSelected haya cambiado.
+    //Tenemos que tener una lista de archivos a descargar
+    var current_file = data.file;
+    var peers = data.peers;
     var peers_amount = peers.length;
 
     var client_p2p = new ClientP2P(onCompleteDownloadFilePeer,
@@ -130,6 +131,8 @@ function onGetPeerList(peers) {
 
 /* Evento que está a la escucha y obtiene el nombre de un nuevo archivo creado en la carpeta de descargas */
 function onAddNewFileDownloadPath(file_name, stats){
+  //FABIAN: No entiendo "list_client_p2p.length == 0" si estoy descargando 1 archivo, no evita que 
+  //informe que hay nuevo archivo hasta que terminen las descargas?
   if (list_client_p2p.length == 0 && mi_client_catalog.isCatalogConnected()){
       mi_client_catalog.sendNewFile(file_name);
   }
@@ -179,8 +182,8 @@ $("#button-search").click(function() {
 
 // Click en el bóton descargar
 $('.container').on('click', 'button.download-button', function() {
-    var id_file = $(this).attr('idfile');
-    mi_client_catalog.getPeersList(id_file);
+    var hash = $(this).attr('idfile');
+    mi_client_catalog.getPeersList(hash);
 });
 
 
@@ -188,7 +191,7 @@ function clearResultTableSearch(){
     $('#search-table tbody tr').remove();
 }
 
-function addResultTableSearch(name, size, peers, id) {
+function addResultTableSearch(name, size, peers, hash) {
     $('#search-table > tbody:last-child').append(`<tr>
       <td class="p-name">
           <b>` + name + `</b>
@@ -201,7 +204,7 @@ function addResultTableSearch(name, size, peers, id) {
           <span class="label label-primary">` + peers + `</span>
       </td>
       <td>
-          <button id="download-button" idfile="` + id + `" class="download-button btn btn-info btn-xs">
+          <button id="download-button" idfile="` + hash + `" class="download-button btn btn-info btn-xs">
               <i class="fa fa-pencil"></i>
               Descargar
           </button>
@@ -252,6 +255,7 @@ function editRowTableDownload(peer_id, state) {
 }
 
 function editRowTablePeer(file_hash, peer_id, state) {
+
     $('#peer-' + file_hash + peer_id + ' > .p-state').html(state);
 }
 
