@@ -122,8 +122,8 @@ function onGetPeerList(data) {
     addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...');
 
     // Agregamos la conexión a la lista
-    list_client_p2p[current_file.id] = client_p2p;
-    list_client_p2p[current_file.id].downloadFile();
+    list_client_p2p[current_file.hash] = client_p2p;
+    list_client_p2p[current_file.hash].downloadFile();
 }
 
 
