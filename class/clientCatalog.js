@@ -21,7 +21,6 @@ class ClientCatalog {
         this._state = CATALOG_DISCONNECTED;
         this._current_file_list = [];
         this._current_file_selected = null;
-        this._current_files_to_download = [];
 
         this._onConnectEvent = onConnect;
         this._onErrorConnectionEvent = onErrorConnection;
@@ -70,20 +69,8 @@ class ClientCatalog {
         return this._current_file_list;
     }
 
-    /* Devuelve el último archivo selecionado para descargar */
-    getCurrentFileSelected() {
-        return this._current_file_selected;
-    }
-
     /* Solicita el listado de pares mediante el HASH del archivo */
     getPeersList(hash) {
-        // FABIAN: puedo seleccionar varios archivos a buscar y todavia el catalogo no me devuelva que 
-        // pares tiene. _current_file_selected tiene que ser un array clave - valor
-        // this._files_to_download[file_to_download.hash] = file_to_download;
-        // var file_to_download = this._current_file_list.filter(
-        //     function(data) {
-        //         return data.hash == hash
-        //     })[0];
         this._socket.emit('getParesArchivo', hash);
     }
 

@@ -104,8 +104,6 @@ function onGetFileList(files) {
 
 /* Evento recibe lista de pares */
 function onGetPeerList(data) {
-    //FABIAN:Entre la respuesta del catalogo puede que el currentFileSelected haya cambiado.
-    //Tenemos que tener una lista de archivos a descargar
     var current_file = data.file;
     var peers = data.peers;
     var peers_amount = peers.length;
