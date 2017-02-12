@@ -51,7 +51,8 @@ function onConnectionBalancer() {
 /* Evento recibe servidor catálogo */
 function onGetServerCatalog(info) {
 
-    console.log('Recibe catalogo: ' + info);
+    console.log('Recibe catalogo: ');
+    console.log(info);
 
     if (info != null){
       // Nos conectamos a un servidor de catálogo
@@ -113,6 +114,10 @@ function onGetPeerList(data) {
             onConnectFilePeer,
             onCompleteDownload);
 
+    // Agregamos la conexión a la lista
+    list_client_p2p['current_file.hash'] = client_p2p;
+    
+
     client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
 
     $.each(peers, function(i, peer) {
@@ -121,17 +126,13 @@ function onGetPeerList(data) {
 
     addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...');
 
-    // Agregamos la conexión a la lista
-    list_client_p2p[current_file.hash] = client_p2p;
-    list_client_p2p[current_file.hash].downloadFile();
+    list_client_p2p['current_file.hash'].downloadFile();    
 }
 
 
 /* Evento que está a la escucha y obtiene el nombre de un nuevo archivo creado en la carpeta de descargas */
 function onAddNewFileDownloadPath(file_name, stats){
-  //FABIAN: No entiendo "list_client_p2p.length == 0" si estoy descargando 1 archivo, no evita que
-  //informe que hay nuevo archivo hasta que terminen las descargas?
-  if (list_client_p2p.length == 0 && mi_client_catalog.isCatalogConnected()){
+  if (Object.keys(list_client_p2p).length == 0 && mi_client_catalog.isCatalogConnected()){
       console.log('Se añadió un nuevo archivo: ' + file_name)
       mi_client_catalog.sendNewFile(file_name);
   }
