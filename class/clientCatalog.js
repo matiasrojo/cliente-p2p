@@ -96,8 +96,17 @@ class ClientCatalog {
         }
     }
 
-    sendDeleteFile(file_name){
+    sendAllFilesNames() {
+        fs.readdir('./downloads/', function(err, files) {
+            $.each(files, function(i, file) {
+                this.sendNewFile(file);
+            }.bind(this));
+        }.bind(this));
+    }
 
+    /* Solicita el borrado de todos los archivos al catálogo */
+    sendDeleteAllFiles(){
+      this._socket.emit('sendEliminarArchivosPorPar');
     }
 
     /* Verifica si se está conectado a un servidor catálogo */
@@ -115,14 +124,6 @@ class ClientCatalog {
        :::::::  MÉTODOS PRIVADOS :::::
        :::::::::::::::::::::::::::::::  */
 
-    _sendAllFilesNames() {
-        fs.readdir('./downloads/', function(err, files) {
-            $.each(files, function(i, file) {
-                this.sendNewFile(file);
-            }.bind(this));
-        }.bind(this));
-    }
-
     /* Envía un mensaje de bienvenida */
     _sendHello() {
         this._socket.emit('parConectado');
@@ -136,7 +137,7 @@ class ClientCatalog {
             this._state = CATALOG_CONNECTED;
             this._onConnectEvent();
             this._sendHello();
-            this._sendAllFilesNames();
+            this.sendAllFilesNames();
         }.bind(this));
 
         // Detecta la desconexión

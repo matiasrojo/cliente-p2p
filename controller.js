@@ -129,16 +129,19 @@ function onGetPeerList(data) {
 
 /* Evento que está a la escucha y obtiene el nombre de un nuevo archivo creado en la carpeta de descargas */
 function onAddNewFileDownloadPath(file_name, stats){
-  //FABIAN: No entiendo "list_client_p2p.length == 0" si estoy descargando 1 archivo, no evita que 
+  //FABIAN: No entiendo "list_client_p2p.length == 0" si estoy descargando 1 archivo, no evita que
   //informe que hay nuevo archivo hasta que terminen las descargas?
   if (list_client_p2p.length == 0 && mi_client_catalog.isCatalogConnected()){
+      console.log('Se añadió un nuevo archivo: ' + file_name)
       mi_client_catalog.sendNewFile(file_name);
   }
 }
 
 /* Evento que está a la escucha y obtiene el nombre de un archivo eliminado de la carpeta de descargas */
 function onDeleteFileDownloadPath(file_name, stats){
-  console.log(stats);
+  console.log('Se eliminó el archivo: ' + file_name);
+  mi_client_catalog.sendDeleteAllFiles();
+  mi_client_catalog.sendAllFilesNames();
 }
 
 

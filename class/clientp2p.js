@@ -112,7 +112,7 @@ class ClientP2P {
     _downloadChunks() {
         if(clientp2p._timer)
             clearInterval(clientp2p._timer)
-        
+
         if(clientp2p._file.downloading == false) return false;
 
         clientp2p._timer = setInterval(clientp2p._downloadChunks, 10000);
@@ -133,8 +133,8 @@ class ClientP2P {
     _downloadChunk(chunk_id, peer_id) {
         var peer = clientp2p._peers[peer_id];
         var socket = io.connect('http://' + peer.ip + ':' + peer.port, {
-            'reconnect': true,
-            'reconnection': true,
+            'reconnect': false,
+            'reconnection': false,
             'reconnectionDelay': 1000,
             'reconnectionDelayMax' : 5000,
             'reconnectionAttempts': MAX_CONS_ATTEMPTS
