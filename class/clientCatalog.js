@@ -155,6 +155,10 @@ class ClientCatalog {
         this._socket.on("listadoPares", function(info) {
             this._onGetPeerListEvent(info);
         }.bind(this));
+
+        this._socket.on("sendEliminarArchivosPorParOk", function() {
+            this.sendAllFilesNames();
+        }.bind(this));
     }
 
     /* Obtiene el tamaño de un archivo en bytes */
