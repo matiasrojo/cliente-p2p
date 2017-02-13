@@ -43,6 +43,13 @@ class ClientP2P {
 
     /* Agrega un nuevo servidor-par */
     addPeer(ip, port) {
+        for(var peer_id = 0; peer_id < this._peers.length; peer_id++) {
+            var peer = this._peers[peer_id];
+
+            if(peer.ip == ip && peer.port == port)
+                return false;
+        };
+
         this._peers.push({
             id: this._peers.length,
             ip: ip,
@@ -83,11 +90,18 @@ class ClientP2P {
 
     /* Verifica si el cliente se encuentra haciendo una descarga */
     isClientDownloading() {
+        return this._file.downloading;
+    /*
       if (this._state == CLIENT_DOWNLOADING){
         return true;
       }else{
         return false;
       }
+      */
+    }
+
+    getFileHash() {
+        return this._file.hash;
     }
 
 
@@ -164,7 +178,7 @@ class ClientP2P {
             if(this._peers[peer_id].conecctionsAttempts == MAX_CONS_ATTEMPTS) {
                 socket.disconnect();
                 this._rollbackChunk(chunk_id);
-                //this._peers.splice(peer_id, 1);
+                this._peers.splice(peer_id, 1);
 
                 console.log('Deshabilitando par ' + peer.ip + ":" + peer.port);
             }
