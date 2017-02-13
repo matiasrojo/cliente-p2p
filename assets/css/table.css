@@ -5,7 +5,6 @@ tr {
 }
 
 table {
-    height: 300px; // <-- Select the height of the table
     display: -moz-groupbox; // Firefox Bad Effect
 }
 
@@ -14,10 +13,8 @@ table.download {
 }
 
 tbody {
-    overflow-y: scroll;
-    height: 200px; //  <-- Select the height of the body
+    overflow-y: auto;
     width: 100%;
-    position: absolute;
 }
 
 table.download tbody{

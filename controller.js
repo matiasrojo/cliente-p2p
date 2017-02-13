@@ -116,7 +116,7 @@ function onGetPeerList(data) {
 
     // Agregamos la conexión a la lista
     list_client_p2p['current_file.hash'] = client_p2p;
-    
+
 
     client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
 
@@ -126,7 +126,7 @@ function onGetPeerList(data) {
 
     addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...');
 
-    list_client_p2p['current_file.hash'].downloadFile();    
+    list_client_p2p['current_file.hash'].downloadFile();
 }
 
 
@@ -250,6 +250,10 @@ function addRowTablePeer(file_name, file_hash, id, ip, fragment, state) {
             <span>` + state + `</span>
         </td>
     </tr>`);
+
+    var rowpos = $('#peer-' + file_hash + id).position();
+    $('#container-peers').scrollTop(rowpos.top);
+
 }
 
 function editRowTableDownload(peer_id, state) {

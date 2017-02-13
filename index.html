@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html style="height: 100%;min-height: 800px;">
     <head>
         <meta charset="UTF-8">
         <title>Cliente P2P - Conectando al Balanceador...
@@ -8,12 +8,12 @@
         <link rel="stylesheet" href="./assets/css/tab.css">
         <link rel="stylesheet" href="./assets/css/table.css">
     </head>
-    <body>
+    <body style="height: 100%;">
 
-        <section style="background:#efefe9">
-            <div class="container">
-                <div class="row">
-                    <div class="board">
+        <section style="background:#efefe9; height: 100%;">
+            <div class="container" style="height: 100%;">
+                <div class="row" style="height: 100%;">
+                    <div class="board" style="    height: calc(100% - 150px);">
                         <!-- <h2>Welcome to IGHALO!<sup>™</sup></h2>-->
                         <div class="board-inner">
                             <ul class="nav nav-tabs" id="myTab">
@@ -35,10 +35,10 @@
                             </ul>
                         </div>
 
-                        <div class="tab-content">
+                        <div class="tab-content" style="height: calc(100% - 110px);">
 
-                            <div class="tab-pane fade in active" id="search">
-                                <section class="panel">
+                            <div class="tab-pane fade in active" id="search" style="height: 100%">
+                                <section class="panel" style="height: 100%">
                                     <div class="panel-body">
                                         <div class="row">
 
@@ -54,24 +54,26 @@
                                     </div>
 
                                     <div id="info-no-files" class="alert alert-info" role="alert" hidden>Upps.. ¡No se encontró ningún archivo con ese nombre!</div>
+                                    <div style="height: calc(100% - 60px); overflow-y:auto;">
+                                      <table id="search-table" class="table table-hover p-table header-fixed">
+                                          <thead>
+                                              <tr>
+                                                  <th>Nombre</th>
+                                                  <th>Tamaño</th>
+                                                  <th>Cantidad de Pares</th>
+                                                  <th>Acción</th>
+                                              </tr>
+                                          </thead>
+                                          <tbody></tbody>
+                                      </table>
+                                    </div>
 
-                                    <table id="search-table" class="table table-hover p-table header-fixed">
-                                        <thead>
-                                            <tr>
-                                                <th>Nombre</th>
-                                                <th>Tamaño</th>
-                                                <th>Cantidad de Pares</th>
-                                                <th>Acción</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
                                 </section>
                             </div>
 
-                            <div class="tab-pane fade" id="download">
+                            <div class="tab-pane fade" id="download" style="    height: 100%;">
 
-                                <div class="">
+                                <div style="    height: 50%;overflow: auto;">
                                     <h4>Descargas</h4>
                                     <table id="download-table" class="table table-hover p-table header-fixed download">
                                         <thead>
@@ -86,7 +88,7 @@
                                     </table>
                                 </div>
 
-                                <div class="">
+                                <div style="    height: 50%;overflow: auto;" id="container-peers">
                                     <table id="peers-table" class="table table-hover p-table header-fixed table-striped table-bordered table-condensed download">
                                         <thead>
                                             <tr>
