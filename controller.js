@@ -23,19 +23,20 @@ function load() {
     mi_server_p2p.listen();
 
     // Iniciamos la conexión con el balanceador de cargas
-    mi_client_balancer.addIPPort('127.0.0.1', 3333);
+    mi_client_balancer.addIPPort('192.168.0.9', 3333);
     //mi_client_balancer.addIPPort('192.168.0.35', 3333);
     mi_client_balancer.connect();
 
     // Solicitamos un servidor de catalogo al balanceador de cargas
     mi_client_balancer.getCatalogServer();
-
-    setTimeout(function() {
-      $.each(list_client_p2p, function(i, client_p2p) {
+ 
+    setInterval(function() {
+      for(var hash in list_client_p2p) { 
+        client_p2p = list_client_p2p[hash];
         if(client_p2p.isClientDownloading())
-          mi_client_catalog.getPeersList(client_p2p.getFileHash());
-      });
-    }, 1000 * 10)
+          mi_client_catalog.getPeersList(hash);
+      }
+    }, 1000 * 10) //10 seconds
 }
 
 function searchFiles(name) {
@@ -116,8 +117,6 @@ function onGetPeerList(data) {
     var peers = data.peers;
     var peers_amount = peers.length;
     var client_p2p = list_client_p2p[current_file.hash];
-
-    console.log(list_client_p2p);
 
     client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
 
