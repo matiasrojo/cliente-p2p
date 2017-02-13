@@ -23,12 +23,19 @@ function load() {
     mi_server_p2p.listen();
 
     // Iniciamos la conexión con el balanceador de cargas
-    mi_client_balancer.addIPPort('192.168.0.9', 3333);
+    mi_client_balancer.addIPPort('127.0.0.1', 3333);
     //mi_client_balancer.addIPPort('192.168.0.35', 3333);
     mi_client_balancer.connect();
 
     // Solicitamos un servidor de catalogo al balanceador de cargas
     mi_client_balancer.getCatalogServer();
+
+    setTimeout(function() {
+      $.each(list_client_p2p, function(i, client_p2p) {
+        if(client_p2p.isClientDownloading())
+          mi_client_catalog.getPeersList(client_p2p.getFileHash());
+      });
+    }, 1000 * 10)
 }
 
 function searchFiles(name) {
@@ -108,15 +115,9 @@ function onGetPeerList(data) {
     var current_file = data.file;
     var peers = data.peers;
     var peers_amount = peers.length;
+    var client_p2p = list_client_p2p[current_file.hash];
 
-    var client_p2p = new ClientP2P(onCompleteDownloadFilePeer,
-            onErrorConnectionClientP2P,
-            onConnectFilePeer,
-            onCompleteDownload);
-
-    // Agregamos la conexión a la lista
-    list_client_p2p['current_file.hash'] = client_p2p;
-
+    console.log(list_client_p2p);
 
     client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
 
@@ -126,7 +127,7 @@ function onGetPeerList(data) {
 
     addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...',current_file.hash);
 
-    list_client_p2p['current_file.hash'].downloadFile();
+    client_p2p.downloadFile();
 }
 
 
@@ -185,6 +186,13 @@ $("#button-search").click(function() {
 // Click en el bóton descargar
 $('.container').on('click', 'button.download-button', function() {
     var hash = $(this).attr('idfile');
+
+    var client_p2p = new ClientP2P(onCompleteDownloadFilePeer,
+            onErrorConnectionClientP2P,
+            onConnectFilePeer,
+            onCompleteDownload);
+
+    list_client_p2p[hash] = client_p2p;
     mi_client_catalog.getPeersList(hash);
 });
 
