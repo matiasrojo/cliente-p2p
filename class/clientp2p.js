@@ -132,8 +132,8 @@ class ClientP2P {
     _downloadChunk(chunk_id, peer_id) {
         var peer = this._peers[peer_id];
         var socket = io.connect('http://' + peer.ip + ':' + peer.port, {
-            'reconnect': false,
-            'reconnection': false,
+            'reconnect': true,
+            'reconnection': true,
             'reconnectionDelay': 1000,
             'reconnectionDelayMax' : 5000,
             'reconnectionAttempts': MAX_CONS_ATTEMPTS
