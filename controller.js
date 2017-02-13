@@ -142,7 +142,7 @@ function onAddNewFileDownloadPath(file_name, stats){
 function onDeleteFileDownloadPath(file_name, stats){
   console.log('Se eliminó el archivo: ' + file_name);
   mi_client_catalog.sendDeleteAllFiles();
-  mi_client_catalog.sendAllFilesNames();
+  mi_client_catalog.sendAllFilesNames(true);
 }
 
 

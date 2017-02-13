@@ -75,11 +75,11 @@ class ClientCatalog {
     }
 
     /* Notifica la existencia del nuevo archivo al Catalogo */
-    sendNewFile(file,se_elimino) {
+    sendNewFile(file,se_elimino = false) {
+        
         if (file.charAt(0) != ".") {
             md5File('./downloads/' + file, (err, hash) => {
                 if (err){
-
                   console.log(file + " está ocupado. Se reenviará en 5 segundos...")
                   setTimeout(function(){ this.sendNewFile(file, null) }.bind(this), 1000 * 5)
                 }else{
@@ -98,7 +98,8 @@ class ClientCatalog {
         }
     }
 
-    sendAllFilesNames(se_elimino = false) {
+    sendAllFilesNames(se_elimino) {
+        
         fs.readdir('./downloads/', function(err, files) {
             $.each(files, function(i, file) {
                 this.sendNewFile(file,se_elimino);
@@ -139,7 +140,7 @@ class ClientCatalog {
             this._state = CATALOG_CONNECTED;
             this._onConnectEvent();
             this._sendHello();
-            this.sendAllFilesNames();
+            this.sendAllFilesNames(false);
         }.bind(this));
 
         // Detecta la desconexión
