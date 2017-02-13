@@ -13,7 +13,7 @@ const CLIENT_DOWNLOADING = 2;
 class ClientP2P {
 
     constructor(onCompleteDownloadFilePeer, onErrorConnection, onConnectFilePeer, onCompleteDownload) {
-        
+
         this._state = CLIENT_DISCONNECTED;
         this._file = {
             id: null,
@@ -27,6 +27,7 @@ class ClientP2P {
             pending: [],
             current: []
         };
+        this._descargadoActual = 0;
         this._connections = 0;
         this._timer = null;
         this._onCompleteDownloadFilePeerEvent = onCompleteDownloadFilePeer;
@@ -231,14 +232,15 @@ class ClientP2P {
 
                     this._file.downloading = false;
                     clearInterval(this._timer);
-                    this._onCompleteDownloadEvent(this._file.id, this._file.name);
+                    this._onCompleteDownloadEvent(this._file.id, this._file.name,this._file.hash);
                 }
             }.bind(this),
             function() {
                 this._rollbackChunk(chunk_id);
             }.bind(this));
-
-        this._onCompleteDownloadFilePeerEvent(this.getPeer(peer_id), this._file.hash, info);
+            this._descargadoActual = (this._descargadoActual+CHUNK_SIZE);
+            let porcentajeActual = parseInt((this._descargadoActual * 100) / this._file.size);
+        this._onCompleteDownloadFilePeerEvent(this.getPeer(peer_id), this._file.hash, info,porcentajeActual);
         this._downloadChunks();
     }
 

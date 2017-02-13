@@ -124,7 +124,7 @@ function onGetPeerList(data) {
       client_p2p.addPeer(peer.ip, 6532);
     });
 
-    addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...');
+    addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...',current_file.hash);
 
     list_client_p2p['current_file.hash'].downloadFile();
 }
@@ -159,14 +159,14 @@ function onConnectFilePeer(peer, file_hash, file_name, chunk) {
 }
 
 /* Se completa la descarga del par */
-function onCompleteDownloadFilePeer(peer, file_hash, chunk) {
-  editRowTablePeer(file_hash, chunk.offset, 'Completo');
+function onCompleteDownloadFilePeer(peer, file_hash, chunk,porcentaje) {
+  editRowTablePeer(file_hash, chunk.offset, 'Completo',porcentaje);
 }
 
 
 /* Se completa la descarga */
-function onCompleteDownload(file_id, file_name) {
-    editRowTableDownload(file_id, 'Completo');
+function onCompleteDownload(file_id, file_name,file_hash) {
+    editRowTableDownload(file_id, 'Completo',file_hash);
     mi_client_catalog.sendNewFile(file_name);
 }
 
@@ -214,7 +214,7 @@ function addResultTableSearch(name, size, peers, hash) {
   </tr>`);
 }
 
-function addRowTableDownload(id, name, size, peers, state) {
+function addRowTableDownload(id, name, size, peers, state,hash) {
     $('#download-table > tbody:last-child').append(`<tr id="download-` + id + `">
       <td class="p-name">
           <b>` + name + `</b>
@@ -227,9 +227,11 @@ function addRowTableDownload(id, name, size, peers, state) {
           <span class="label label-primary">` + peers + `</span>
       </td>
       <td class="p-state">
-          <span>` + state + `</span>
+          <span id="state">` + state + `</span>
       </td>
-  </tr>`);
+      <td>
+          <span id="porcentaje-`+hash+`">(0%)</span>
+      </td></tr>`);
 }
 
 function addRowTablePeer(file_name, file_hash, id, ip, fragment, state) {
@@ -256,13 +258,15 @@ function addRowTablePeer(file_name, file_hash, id, ip, fragment, state) {
 
 }
 
-function editRowTableDownload(peer_id, state) {
-    $('#download-' + peer_id + ' > .p-state').html(state);
+function editRowTableDownload(peer_id, state,file_hash) {
+    $('#download-' + peer_id + '  #state').html(state);
+    $('#porcentaje-' + file_hash).html('(100%)');
 }
 
-function editRowTablePeer(file_hash, peer_id, state) {
+function editRowTablePeer(file_hash, peer_id, state,porcentaje_descargado) {
+    $('#peer-' + file_hash + peer_id + '  #p-state').html(state);
+    $('#porcentaje-' + file_hash).html('('+porcentaje_descargado+'%)');
 
-    $('#peer-' + file_hash + peer_id + ' > .p-state').html(state);
 }
 
 
