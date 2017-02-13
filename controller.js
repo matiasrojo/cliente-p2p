@@ -34,7 +34,7 @@ function load() {
       for(var hash in list_client_p2p) { 
         client_p2p = list_client_p2p[hash];
         if(client_p2p.isClientDownloading())
-          mi_client_catalog.getPeersList(hash);
+          mi_client_catalog.getPeersList(hash, false);
       }
     }, 1000 * 10) //10 seconds
 }
@@ -118,7 +118,8 @@ function onGetPeerList(data) {
     var peers_amount = peers.length;
     var client_p2p = list_client_p2p[current_file.hash];
 
-    client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
+    if(data.first_time)
+      client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
 
     $.each(peers, function(i, peer) {
       client_p2p.addPeer(peer.ip, 6532);
@@ -192,7 +193,7 @@ $('.container').on('click', 'button.download-button', function() {
             onCompleteDownload);
 
     list_client_p2p[hash] = client_p2p;
-    mi_client_catalog.getPeersList(hash);
+    mi_client_catalog.getPeersList(hash, true);
 });
 
 

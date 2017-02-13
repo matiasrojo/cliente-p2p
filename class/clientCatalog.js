@@ -70,8 +70,8 @@ class ClientCatalog {
     }
 
     /* Solicita el listado de pares mediante el HASH del archivo */
-    getPeersList(hash) {
-        this._socket.emit('getParesArchivo', hash);
+    getPeersList(hash, first_time) {
+        this._socket.emit('getParesArchivo', {hash: hash, first_time: first_time});
     }
 
     /* Notifica la existencia del nuevo archivo al Catalogo */
