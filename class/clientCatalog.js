@@ -75,7 +75,7 @@ class ClientCatalog {
     }
 
     /* Notifica la existencia del nuevo archivo al Catalogo */
-    sendNewFile(file) {
+    sendNewFile(file,se_elimino) {
         if (file.charAt(0) != ".") {
             md5File('./downloads/' + file, (err, hash) => {
                 if (err){
@@ -87,19 +87,21 @@ class ClientCatalog {
                   this._socket.emit('nuevoArchivo', {
                       hash: hash,
                       nombre: file,
-                      size: this._getFilesize('./downloads/' + file)
+                      size: this._getFilesize('./downloads/' + file),
+                      se_elimino:se_elimino
                   });
-
-                  console.log('Se anunció el archivo ' + file);
+                  if(!se_elimino){
+                    console.log('Se anunció el archivo ' + file);
+                  }
                 }
             })
         }
     }
 
-    sendAllFilesNames() {
+    sendAllFilesNames(se_elimino = false) {
         fs.readdir('./downloads/', function(err, files) {
             $.each(files, function(i, file) {
-                this.sendNewFile(file);
+                this.sendNewFile(file,se_elimino);
             }.bind(this));
         }.bind(this));
     }
@@ -157,7 +159,7 @@ class ClientCatalog {
         }.bind(this));
 
         this._socket.on("sendEliminarArchivosPorParOk", function() {
-            this.sendAllFilesNames();
+            this.sendAllFilesNames(true);
         }.bind(this));
     }
 
