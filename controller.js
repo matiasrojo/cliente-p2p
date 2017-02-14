@@ -118,16 +118,21 @@ function onGetPeerList(data) {
     var peers_amount = peers.length;
     var client_p2p = list_client_p2p[current_file.hash];
 
-    if(data.first_time)
-      client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
-
+    
     $.each(peers, function(i, peer) {
       client_p2p.addPeer(peer.ip, 6532);
     });
 
-    addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...',current_file.hash);
+    if(data.first_time){
 
-    client_p2p.downloadFile();
+      client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
+
+      addRowTableDownload(current_file.id, current_file.nombre, current_file.size, peers_amount, 'Descargando...',current_file.hash);
+
+      client_p2p.downloadFile();
+    }
+
+    
 }
 
 
