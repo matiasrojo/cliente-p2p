@@ -41,15 +41,22 @@ class ServerP2P {
                 var buffer = new Buffer(data.size);
 
                 fs.open('./downloads/' + data.file, 'r', function(err, fd) {
-
-                    fs.read(fd, buffer, 0, data.size, data.offset, function(err, num) {
-                        socket.emit('sendfile', {
-                            buffer: buffer,
+                    if(err) {
+                        socket.emit('filenotfound', {
                             offset: data.offset,
                             size: data.size,
                             fileName: data.file
                         });
-                    });
+                    } else {
+                        fs.read(fd, buffer, 0, data.size, data.offset, function(err, num) {
+                            socket.emit('sendfile', {
+                                buffer: buffer,
+                                offset: data.offset,
+                                size: data.size,
+                                fileName: data.file
+                            });
+                        });
+                    }
                 });
             });
 
