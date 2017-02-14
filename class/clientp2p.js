@@ -5,7 +5,7 @@ var fs = require('fs');
 
 const CHUNK_SIZE = 1024*1024; //1Mb
 const MAX_CONS = 10; //clientp2p must be configurable
-const MAX_CONS_ATTEMPTS = 5;
+const MAX_CONS_ATTEMPTS = 3;
 const CLIENT_DISCONNECTED = 0;
 const CLIENT_CONNECTED = 1;
 const CLIENT_DOWNLOADING = 2;
@@ -128,7 +128,7 @@ class ClientP2P {
             clearInterval(this._timer)
 
         if(this._file.downloading == false) return false;
-        this._timer = setInterval(this._downloadChunks.bind(this), 2000);
+        this._timer = setInterval(this._downloadChunks.bind(this), 1000);
 
         for(var peer_id = 0; peer_id < this._peers.length; peer_id++) {
             var peer = this._peers[peer_id];
@@ -148,8 +148,8 @@ class ClientP2P {
         var socket = io.connect('http://' + peer.ip + ':' + peer.port, {
             'reconnect': true,
             'reconnection': true,
-            'reconnectionDelay': 1000,
-            'reconnectionDelayMax' : 5000,
+            'reconnectionDelay': 500,
+            'reconnectionDelayMax' : 4000,
             'reconnectionAttempts': MAX_CONS_ATTEMPTS
         });
 
@@ -162,7 +162,6 @@ class ClientP2P {
             this._state = CLIENT_CONNECTED;
 
             this._connections++;
-            this._peers[peer_id].conecctionsAttempts = 0;
             this._peers[peer_id].currentChunk = chunk_id;
 
             if(this._chunks.current[chunk_id] != undefined)
@@ -172,14 +171,10 @@ class ClientP2P {
         //Detecta si hubo un error en la conexión
         socket.on('connect_error', function(error) {
             console.log('connect_error');
-
-            this._peers[peer_id].conecctionsAttempts++;
-
-            if(this._peers[peer_id].conecctionsAttempts == MAX_CONS_ATTEMPTS) {
-                socket.disconnect();
-                this._rollbackChunk(chunk_id);
+            socket.disconnect();
+            this._rollbackChunk(chunk_id);
+            if(this._peers[peer_id]!=undefined){
                 this._peers.splice(peer_id, 1);
-
                 console.log('Deshabilitando par ' + peer.ip + ":" + peer.port);
             }
 
@@ -190,14 +185,15 @@ class ClientP2P {
         // Detecta la desconexión
         socket.on('disconnect', function() {
             this._connections--;
-            this._peers[peer_id].state = 0;
+            if(this._peers[peer_id]!=undefined){
+                this._peers[peer_id].state = 0;
 
-            var chunk = this._chunks.current[chunk_id];
-            if(chunk && (chunk.received == false)) {
-                this._rollbackChunk(chunk_id);
-                this._onErrorConnectionEvent(peer, this._file.id);
+                var chunk = this._chunks.current[chunk_id];
+                if(chunk && (chunk.received == false)) {
+                    this._rollbackChunk(chunk_id);
+                    this._onErrorConnectionEvent(peer, this._file.id);
+                }
             }
-
             this._downloadChunks();
         }.bind(this));
 
