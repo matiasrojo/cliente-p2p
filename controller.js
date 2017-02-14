@@ -124,6 +124,7 @@ function onGetPeerList(data) {
     });
 
     if(data.first_time){
+      
 
       client_p2p.setFile(current_file.id, current_file.nombre, current_file.hash,current_file.size);
 
