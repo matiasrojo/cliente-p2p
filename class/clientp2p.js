@@ -213,6 +213,23 @@ class ClientP2P {
             this._onCompleteDownloadFilePeer(peer_id, info);
             socket.disconnect();
         }.bind(this));
+
+        socket.on("filenotfound", function(info) {
+            this._onFileNotFound(peer_id, info);
+            socket.disconnect();
+        }.bind(this));
+    }
+
+    _onFileNotFound(peer_id, info) {
+        var chunk_id = info.offset.toString();
+        var peer = this._peers[peer_id];
+
+        this._rollbackChunk(chunk_id);
+
+        console.log('Deshabilitando par ' + peer.ip + ":" + peer.port);
+        this._peers.splice(peer_id, 1);
+        
+        this._downloadChunks();
     }
 
     /* Método que se ejecuta cuando se finaliza la descarga de uno de los pares */
